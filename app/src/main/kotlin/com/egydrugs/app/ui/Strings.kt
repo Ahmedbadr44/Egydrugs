@@ -29,10 +29,16 @@ object Str {
     const val PRICE = "السعر"
     const val DOSAGE = "الجرعة"
     const val DOSAGE_FUTURE = "سيتم إضافة بيانات الجرعات لاحقًا"
+    const val USES = "الاستخدامات"
+    const val MEDICAL_DOSAGE = "الجرعات المعتادة"
+    const val SIDE_EFFECTS = "الأعراض الجانبية المحتملة"
+    const val WARNINGS = "التحذيرات والاحتياطات"
+    const val MEDICAL_SOURCE = "المصدر: %s"
+    const val UNKNOWN_SOURCE = "مصدر طبي موثوق"
     const val CURRENCY = "ج.م"
     const val NO_PRICE = "غير متوفر"
     const val DISCLAIMER =
-        "المعلومات للاسترشاد فقط، والأسعار بتتغير. راجع الصيدلي أو الطبيب قبل أي استبدال للدواء."
+        "الاستخدامات والجرعات والأعراض الجانبية معلومات مرجعية وليست تشخيصًا أو وصفة شخصية. اتبع النشرة المعتمدة واستشر الطبيب أو الصيدلي قبل الاستخدام أو تغيير الجرعة. الأسعار بتتغير."
 
     const val FILTER_ROUTE = "نفس الشكل الدوائي"
     const val FILTER_STRENGTH = "نفس التركيز"
