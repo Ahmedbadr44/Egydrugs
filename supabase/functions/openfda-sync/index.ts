@@ -219,6 +219,7 @@ async function main(req: Request) {
     .select("id,drug_id,attempts")
     .eq("provider", "openFDA")
     .in("status", ["pending", "error", "needs_review"])
+    .order("priority", { ascending: true })
     .order("updated_at", { ascending: true })
     .limit(batchSize);
 
