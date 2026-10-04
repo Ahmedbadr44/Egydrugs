@@ -23,7 +23,10 @@
       <section class="workspace" aria-label="الأدوية">
         <div class="toolbar">
           <label class="search-field"><i data-lucide="search" aria-hidden="true"></i><input id="search" type="search" placeholder="ابحث بالاسم أو المادة الفعالة" autocomplete="off" /></label>
-          <button id="add-drug" class="primary-button" type="button"><i data-lucide="plus" aria-hidden="true"></i>إضافة دواء</button>
+          <div class="toolbar-actions">
+            <button id="sync-openfda" class="secondary-button" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i>مزامنة OpenFDA</button>
+            <button id="add-drug" class="primary-button" type="button"><i data-lucide="plus" aria-hidden="true"></i>إضافة دواء</button>
+          </div>
         </div>
         <p id="notice" class="notice" role="status" aria-live="polite"></p>
         <div class="table-wrap">
