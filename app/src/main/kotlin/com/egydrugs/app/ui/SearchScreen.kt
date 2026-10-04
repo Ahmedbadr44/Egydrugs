@@ -196,9 +196,7 @@ private fun ScopeChips(selected: SearchScope, onChange: (SearchScope) -> Unit) {
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        ScopeChip(Str.SCOPE_ALL, selected == SearchScope.ALL) { onChange(SearchScope.ALL) }
-        ScopeChip(Str.SCOPE_ARABIC, selected == SearchScope.ARABIC) { onChange(SearchScope.ARABIC) }
-        ScopeChip(Str.SCOPE_ENGLISH, selected == SearchScope.ENGLISH) { onChange(SearchScope.ENGLISH) }
+        ScopeChip(Str.SCOPE_BRAND, selected == SearchScope.BRAND) { onChange(SearchScope.BRAND) }
         ScopeChip(Str.SCOPE_INGREDIENT, selected == SearchScope.INGREDIENT) { onChange(SearchScope.INGREDIENT) }
     }
 }
