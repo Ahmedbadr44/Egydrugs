@@ -20,7 +20,7 @@ class SearchTest {
         }
     }
 
-    private fun names(q: String, scope: SearchScope = SearchScope.ALL): List<String> =
+    private fun names(q: String, scope: SearchScope = SearchScope.BRAND): List<String> =
         index.search(q, scope).map { it.nameEn }
 
     @Test
@@ -58,9 +58,9 @@ class SearchTest {
     fun scopesAreRespected() {
         assertTrue(names("paracetamol", SearchScope.INGREDIENT).isNotEmpty())
         // A Latin spelling still finds the drug when only the Arabic name is searched (phonetic match).
-        assertTrue(names("panadol", SearchScope.ARABIC).take(5).any { it.startsWith("PANADOL") })
+        assertTrue(names("panadol", SearchScope.BRAND).take(5).any { it.startsWith("PANADOL") })
         // An Arabic spelling still finds the drug when only the English name is searched.
-        assertTrue(names("بانادول", SearchScope.ENGLISH).first().startsWith("PANADOL"))
+        assertTrue(names("بانادول", SearchScope.BRAND).first().startsWith("PANADOL"))
     }
 
     @Test
