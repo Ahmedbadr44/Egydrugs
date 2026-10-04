@@ -45,7 +45,6 @@ fun DetailScreen(
     val drug = state.drug
     val isTopical = drug.nameEn.contains("CREAM", ignoreCase = true) ||
         drug.nameEn.contains("OINTMENT", ignoreCase = true) ||
-        drug.nameEn.contains("GEL", ignoreCase = true) ||
         drug.route.contains("TOPICAL", ignoreCase = true) ||
         drug.route.contains("DERMAL", ignoreCase = true)
 
@@ -115,7 +114,7 @@ fun DetailScreen(
             if (isTopical) {
                 item(key = "topical-advice") {
                     Text(
-                        "استشر طبيبك أو الصيدلي قبل استخدام الكريمات أو المراهم.",
+                        "استشر طبيبك أو الصيدلي قبل استخدام الكريم أو المرهم.",
                         modifier = Modifier.padding(horizontal = 4.dp),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
