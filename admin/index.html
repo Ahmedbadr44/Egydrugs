@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#006c62" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; img-src 'self' data: https:; object-src 'none'; base-uri 'self'; form-action 'self'" />
     <title>إدارة دليل الأدوية</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -77,6 +77,14 @@
           <label>الشكل الدوائي<input id="route" list="route-options" autocomplete="off" /><datalist id="route-options"></datalist><small class="dropdown-hint" id="route-hint">اختر من القائمة أو اكتب شكلًا دوائيًا جديدًا.</small></label>
           <label>السعر (ج.م)<input id="price" type="number" min="0" step="0.01" /></label>
           <label class="full-width">الجرعة<input id="dosage" /></label>
+          <label class="full-width">الاستخدامات <small>(اكتب كل استخدام في سطر)</small><textarea id="uses" rows="4" placeholder="الاستخدام الأول&#10;الاستخدام الثاني"></textarea></label>
+          <label class="full-width">الجرعات المعتادة <small>(اكتب كل جرعة في سطر)</small><textarea id="medical-dosages" rows="4" placeholder="جرعة البالغين...&#10;جرعة الأطفال..."></textarea></label>
+          <label class="full-width">الأعراض الجانبية المحتملة <small>(اكتب كل عرض في سطر)</small><textarea id="side-effects" rows="4" placeholder="صداع&#10;غثيان"></textarea></label>
+          <label class="full-width">التحذيرات والاحتياطات <small>(اكتب كل تحذير في سطر)</small><textarea id="warnings" rows="4"></textarea></label>
+          <label>رابط صورة الدواء<input id="image-url" type="url" placeholder="https://..." /></label>
+          <label>اسم مصدر الصورة<input id="image-source-name" /></label>
+          <label>رابط المصدر الطبي<input id="source-url" type="url" placeholder="https://..." /></label>
+          <label>اسم المصدر الطبي<input id="source-name" placeholder="مثال: النشرة المعتمدة" /></label>
         </div>
         <p id="dialog-error" class="form-error" role="alert"></p>
         <footer class="dialog-actions"><button id="cancel-dialog" class="secondary-button" type="button">إلغاء</button><button class="primary-button" type="submit">حفظ</button></footer>
