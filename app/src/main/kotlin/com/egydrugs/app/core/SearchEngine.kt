@@ -1,6 +1,6 @@
 package com.egydrugs.app.core
 
-enum class SearchScope { ALL, ARABIC, ENGLISH, INGREDIENT }
+enum class SearchScope { BRAND, INGREDIENT }
 
 /** A drug together with the pre-computed search keys. Built once at start-up. */
 class IndexedDrug(
@@ -100,14 +100,12 @@ class SearchEngine(private val items: List<IndexedDrug>) {
 
     private fun score(d: IndexedDrug, q: Query, scope: SearchScope): Int {
         return when (scope) {
-            SearchScope.ENGLISH -> fieldScore(d.litEn, d.pkEn, d.skEn, q, 0)
-            SearchScope.ARABIC -> fieldScore(d.litAr, null, d.skAr, q, 0)
-            SearchScope.INGREDIENT -> fieldScore(d.litSci, d.pkSci, d.skSci, q, 0)
-            SearchScope.ALL -> {
+            SearchScope.BRAND -> {
                 var best = fieldScore(d.litEn, d.pkEn, d.skEn, q, 0)
                 best = better(best, fieldScore(d.litAr, null, d.skAr, q, 0))
-                better(best, fieldScore(d.litSci, d.pkSci, d.skSci, q, 1))
+                best
             }
+            SearchScope.INGREDIENT -> fieldScore(d.litSci, d.pkSci, d.skSci, q, 0)
         }
     }
 
@@ -213,14 +211,11 @@ class SearchEngine(private val items: List<IndexedDrug>) {
         }
 
         when (scope) {
-            SearchScope.ENGLISH -> scan(d.litEn)
-            SearchScope.ARABIC -> scan(d.litAr)
-            SearchScope.INGREDIENT -> scan(d.litSci)
-            SearchScope.ALL -> {
+            SearchScope.BRAND -> {
                 scan(d.litEn)
                 scan(d.litAr)
-                scan(d.litSci)
             }
+            SearchScope.INGREDIENT -> scan(d.litSci)
         }
         return if (best <= maxD) best else -1
     }
