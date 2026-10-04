@@ -2,6 +2,23 @@ const DROP = "\u0000";
 
 function lower(c){ return c >= "A" && c <= "Z" ? String.fromCharCode(c.charCodeAt(0)+32) : c; }
 
+function isArabicChar(ch){
+  const code=ch.charCodeAt(0);
+  return code>=0x0600&&code<=0x06ff;
+}
+
+function queryScript(raw){
+  let hasArabic=false, hasLatin=false;
+  for(const ch of String(raw)){
+    if(/[A-Za-z]/.test(ch)) hasLatin=true;
+    else if(isArabicChar(ch)&&/\p{L}/u.test(ch)) hasArabic=true;
+  }
+  if(hasArabic&&!hasLatin) return "ar";
+  if(hasLatin&&!hasArabic) return "en";
+  if(hasArabic) return "ar";
+  return "en";
+}
+
 function literalChar(ch){
   const code=ch.charCodeAt(0);
   if((ch>="a"&&ch<="z")||(ch>="0"&&ch<="9")) return ch;
@@ -24,7 +41,7 @@ export function literal(text=""){
   for(const ch of String(text)){
     const c=literalChar(ch);
     if(c===DROP) continue;
-    if(c===" "){ if(out && out[out.length-1]!==" ") out+=" "; }
+    if(c===" "){ if(out&&out[out.length-1]!==" ") out+=" "; }
     else out+=c;
   }
   if(out.endsWith(" ")) out=out.slice(0,-1);
@@ -32,7 +49,8 @@ export function literal(text=""){
 }
 
 function arabicKey(ch){
-  if("اأإآٱءةع".includes(ch)) return "a";
+  if("اأإآٱءع".includes(ch)) return "a";
+  if("ة".includes(ch)) return "h";
   if("ىيئ".includes(ch)) return "i";
   if("وؤ".includes(ch)) return "u";
   if("بپ".includes(ch)) return "b";
@@ -57,15 +75,19 @@ function arabicKey(ch){
 export function key(text=""){
   let out="";
   const emit=c=>{
-    if(c===" "){ if(out && out[out.length-1]!==" ") out+=" "; }
-    else if(!out || out[out.length-1]!==c) out+=c;
+    if(c===" "){ if(out&&out[out.length-1]!==" ") out+=" "; }
+    else if(!out||out[out.length-1]!==c) out+=c;
   };
   for(let i=0;i<text.length;i++){
     const c=lower(text[i]), n1=i+1<text.length?lower(text[i+1]):" ";
     if(c>="a"&&c<="z"){
-      if(c==="p"){ if(n1==="h"){emit("f");i++;} else emit("b");}
-      else if(c==="c"){ if(n1==="h"){const n2=i+2<text.length?lower(text[i+2]):" ";emit(["l","r","o"].includes(n2)?"k":"x");i++;} else if(n1==="k"){emit("k");i++;} else if(["e","i","y"].includes(n1)) emit("s"); else emit("k");}
-      else if(c==="s"){if(n1==="h"){emit("x");i++;}else emit("s");}
+      if(c==="p"){if(n1==="h"){emit("f");i++;}else emit("b");}
+      else if(c==="c"){
+        if(n1==="h"){const n2=i+2<text.length?lower(text[i+2]):" ";emit(["l","r","o"].includes(n2)?"k":"x");i++;}
+        else if(n1==="k"){emit("k");i++;}
+        else if(["e","i","y"].includes(n1)) emit("s");
+        else emit("k");
+      } else if(c==="s"){if(n1==="h"){emit("x");i++;}else emit("s");}
       else if(c==="k"){if(n1==="h"){emit("k");i++;}else emit("k");}
       else if(c==="g"){if(n1==="h"){emit("g");i++;}else emit("g");}
       else if(c==="t"){if(n1==="h"){emit("t");i++;}else emit("t");}
@@ -88,11 +110,7 @@ export function key(text=""){
   return out;
 }
 
-export function skeleton(pk=""){
-  let out="";
-  for(const c of pk) if(!"aiu ".includes(c)) out+=c;
-  return out;
-}
+function tokens(text){ return String(text).split(" ").filter(Boolean); }
 
 function orderedFind(hay,segs){
   if(!segs.length) return -1;
@@ -103,142 +121,137 @@ function orderedFind(hay,segs){
   }
   return -1;
 }
+
 function restMatches(hay,segs,from){
   let pos=from;
   for(let n=1;n<segs.length;n++){
     let idx=hay.indexOf(segs[n],pos);
-    while(idx>=0&&!gapAllowed(hay,pos,idx)) idx=hay.indexOf(segs[n],idx+1);
     if(idx<0) return false;
     pos=idx+segs[n].length;
   }
   return true;
 }
-function gapAllowed(hay,from,idx){
-  if(idx===0||hay[idx-1]===" ") return true;
-  if(idx-from>4) return false;
-  for(let k=from;k<idx;k++) if(hay[k]===" ") return false;
+
+// "_" is a single-character wildcard. It is also used internally when the
+// user's query is one character shorter than a candidate token.
+function wildcardMatch(text,pattern){
+  if(text.length!==pattern.length) return false;
+  for(let i=0;i<pattern.length;i++) if(pattern[i]!=="_"&&pattern[i]!==text[i]) return false;
   return true;
 }
 
-// Match query segments against the phonetic key while allowing at most one
-// missing/extra character in each segment. This is the normal typo tolerance.
-function levenshtein(a,b,max){
-  if(Math.abs(a.length-b.length)>max) return max+1;
-  let prev=Array.from({length:b.length+1},(_,i)=>i),cur=new Array(b.length+1);
-  for(let i=1;i<=a.length;i++){
-    cur[0]=i; let rowMin=cur[0];
-    for(let j=1;j<=b.length;j++){
-      const cost=a[i-1]===b[j-1]?0:1;
-      const v=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+cost);
-      cur[j]=v;if(v<rowMin)rowMin=v;
-    }
-    if(rowMin>max)return max+1;
-    [prev,cur]=[cur,prev];
+function wildcardInOneMissingChar(text,query){
+  if(!query||text.length!==query.length+1) return false;
+  for(let i=0;i<text.length;i++){
+    const pattern=query.slice(0,i)+"_"+query.slice(i);
+    if(wildcardMatch(text,pattern)) return true;
   }
-  return prev[b.length];
+  return false;
 }
 
-function fuzzyDistance(item,q,scope){
-  const target=q.skJoined,maxD=target.length>=7?2:1;
-  let best=maxD+1;
-  const scan=lit=>{
-    if(!lit)return;
-    let count=0;
-    for(const tok of lit.split(" ")){
-      if(count>=4)break; count++;
-      if(tok.length<3)continue;
-      const sk=skeleton(key(tok));if(sk.length<2)continue;
-      let dist=levenshtein(target,sk,best-1);
-      if(sk.length>target.length){
-        const pd=levenshtein(target,sk.slice(0,target.length),best-1);
-        if(pd<dist)dist=pd;
+function orderedWildcardFind(hay,queryParts){
+  const words=tokens(hay);
+  const parts=queryParts;
+  if(parts.length===0) return -1;
+  let cursor=0;
+  for(const part of parts){
+    let found=-1;
+    for(let i=cursor;i<words.length;i++){
+      const w=words[i];
+      if(wildcardMatch(w,part)||wildcardInOneMissingChar(w,part)){
+        found=i;break;
       }
-      if(dist<best)best=dist;
     }
-  };
-  if(scope==="brand"){scan(item.litEn);scan(item.litAr);}else scan(item.litSci);
-  return best<=maxD?best:-1;
+    if(found<0) return -1;
+    cursor=found+1;
+  }
+  return hay.indexOf(words[cursor-parts.length]);
 }
 
-function fieldScore(lit,pk,sk,q){
-  let tier=-1;
-  if(lit){
-    const idx=orderedFind(lit,q.lit);
-    if(idx>=0) tier=!q.anchored?3:idx===0?(lit===q.litJoined?0:1):(lit[idx-1]===" "?2:3);
-  }
-  if(tier<0&&pk&&q.pkLen>=2){
-    const idx=orderedFind(pk,q.pk);
-    if(idx>=0) tier=!q.anchored?6:idx===0?4:(pk[idx-1]===" "?5:6);
-  }
-  // One missing/wrong letter is tolerated for a single search token.
-  // Multi-token queries keep the Kotlin ordered-gap behavior above, so they
-  // do not suddenly match unrelated drug names.
-  if(tier<0&&pk&&q.pk.length===1&&q.pkLen>=2){
-    const queryKey=q.pk[0];
-    const words=pk.split(" ").filter(Boolean);
-    for(let wi=0;wi<words.length;wi++){
-      if(levenshtein(queryKey,words[wi],1)<=1){
-        const idx=pk.indexOf(words[wi]);
-        tier=!q.anchored?7:(idx===0?7:(pk[idx-1]===" "?8:9));
-        break;
-      }
-    }
-  }
-  if(tier<0&&sk&&q.skJoined.length>=2){
-    const idx=orderedFind(sk,q.sk);
-    if(idx>=0) tier=q.anchored&&idx===0?10:11;
-  }
-  return tier<0?-1:tier*2;
+function exactOrPhoneticScore(lit,pk,query){
+  const litIdx=orderedFind(lit,query.litParts);
+  if(litIdx>=0) return query.anchored&&litIdx===0?(lit===query.litJoined?0:1):3;
+
+  const pkIdx=orderedFind(pk,query.pkParts);
+  if(pkIdx>=0) return query.anchored&&pkIdx===0?4:6;
+
+  // One missing character: treat the missing character as "_".
+  const litWild=orderedWildcardFind(lit,query.litParts);
+  if(litWild>=0) return query.anchored&&litWild===0?8:9;
+
+  const pkWild=orderedWildcardFind(pk,query.pkParts);
+  if(pkWild>=0) return query.anchored&&pkWild===0?10:11;
+
+  return -1;
 }
 
 function parseQuery(raw){
   if(!raw)return null;
-  const litText=literal(raw);if(!litText)return null;
-  const lit=litText.split(" ");
-  if(lit.reduce((n,x)=>n+x.length,0)<2)return null;
-  const pk=lit.map(key).filter(Boolean);
-  const sk=pk.map(skeleton).filter(Boolean);
-  return {anchored:!/^\s/.test(raw),lit,pk,sk,litJoined:lit.join(" "),pkLen:pk.reduce((n,x)=>n+x.length,0),skJoined:sk.join("")};
+  const text=literal(raw);
+  if(!text)return null;
+  const litParts=tokens(text);
+  if(litParts.reduce((n,x)=>n+x.length,0)<2)return null;
+  const pkParts=litParts.map(key).filter(Boolean);
+  return {
+    script:queryScript(raw),
+    anchored:!/^\s/.test(raw),
+    litParts,
+    pkParts,
+    litJoined:litParts.join(" ")
+  };
 }
 
 function prepare(d){
   const litEn=literal(d.commercial_name_en||"");
   const litAr=literal(d.commercial_name_ar||"");
   const litSci=literal(d.scientific_name||"");
-  const pkEn=key(litEn),pkSci=key(litSci);
-  return {...d,litEn,litAr,litSci,pkEn,pkSci,skEn:skeleton(pkEn),skAr:skeleton(key(litAr)),skSci:skeleton(pkSci)};
+  return {
+    ...d,
+    litEn,
+    litAr,
+    litSci,
+    pkEn:key(litEn),
+    pkAr:key(litAr),
+    pkSci:key(litSci)
+  };
 }
 
 export function createSearchIndex(rows){ return rows.map(prepare); }
 
 export function searchIndex(items,raw,scope="brand",limit=200){
-  const q=parseQuery(raw);if(!q)return [];
-  const hits=[],flagged=new Array(items.length).fill(false);
+  const q=parseQuery(raw);
+  if(!q)return [];
+
+  // Brand search is script-specific:
+  // Arabic query -> Arabic brand name only.
+  // English query -> English brand name only.
+  // Active ingredient search -> English/scientific name only.
+  if(scope==="ingredient"&&q.script!=="en") return [];
+
+  const hits=[];
   for(let i=0;i<items.length;i++){
     const d=items[i];
     let score=-1;
+
     if(scope==="brand"){
-      score=fieldScore(d.litEn,d.pkEn,d.skEn,q);
-      const ar=fieldScore(d.litAr,null,d.skAr,q);
-      if(score<0)score=ar;else if(ar>=0)score=Math.min(score,ar);
-    }else score=fieldScore(d.litSci,d.pkSci,d.skSci,q);
-    if(score>=0){hits.push({index:i,score});flagged[i]=true;}
-  }
-  // Keep fuzzy fallback conservative for multi-word queries. The normal matcher already
-  // supports missing letters between ordered segments (for example "pa ado" or "par cetamol").
-  // Fuzzy matching a whole multi-word phrase can create unrelated hits such as matching
-  // a spoken phrase like "one two three" to arbitrary short drug names.
-  if(hits.length<10&&q.skJoined.length>=3&&q.lit.length===1){
-    for(let i=0;i<items.length;i++){
-      if(flagged[i])continue;
-      const d=fuzzyDistance(items[i],q,scope);
-      if(d>=0)hits.push({index:i,score:20+d});
+      if(q.script==="ar"){
+        score=exactOrPhoneticScore(d.litAr,d.pkAr,q);
+      }else{
+        score=exactOrPhoneticScore(d.litEn,d.pkEn,q);
+      }
+    }else{
+      score=exactOrPhoneticScore(d.litSci,d.pkSci,q);
     }
+
+    if(score>=0) hits.push({index:i,score});
   }
+
   hits.sort((a,b)=>{
     if(a.score!==b.score)return a.score-b.score;
-    const na=items[a.index].commercial_name_en||"",nb=items[b.index].commercial_name_en||"";
+    const na=items[a.index].commercial_name_en||"";
+    const nb=items[b.index].commercial_name_en||"";
     return na.length!==nb.length?na.length-nb.length:na.localeCompare(nb);
   });
+
   return hits.slice(0,limit).map(h=>items[h.index]);
 }
