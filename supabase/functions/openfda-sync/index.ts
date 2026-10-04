@@ -5,6 +5,12 @@ const OPENFDA_URL = "https://api.fda.gov/drug/label.json";
 const DEFAULT_BATCH_SIZE = 10;
 const MAX_BATCH_SIZE = 25;
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type, x-retry-count, traceparent, tracestate, baggage",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 type DrugRow = {
   id: number;
   commercial_name_en: string | null;
@@ -45,6 +51,7 @@ function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
+      ...corsHeaders,
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
     },
@@ -167,13 +174,16 @@ async function findBestLabel(drug: DrugRow): Promise<{ label: LabelRecord | null
 
 function buildMedical(label: LabelRecord) {
   const uses = textArray(label.indications_and_usage, label.uses, label.purpose);
-  const dosages = textArray(label.dosage_and_administration);
   const sideEffects = textArray(label.adverse_reactions);
   const warnings = textArray(label.boxed_warning, label.warnings, label.warnings_and_cautions, label.contraindications);
-  return { uses, dosages, sideEffects, warnings };
+  return { uses, sideEffects, warnings };
 }
 
 async function main(req: Request) {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
   if (req.method !== "POST") return json({ error: "POST required" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -290,13 +300,12 @@ async function main(req: Request) {
         ? `https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=${encodeURIComponent(best.label.set_id)}`
         : null;
 
-      if (confidence >= 0.80 && (medical.uses.length || medical.dosages.length || medical.sideEffects.length || medical.warnings.length)) {
+      if (confidence >= 0.80 && (medical.uses.length || medical.sideEffects.length || medical.warnings.length)) {
         const { error: upsertError } = await adminClient
           .from("drug_medical_info")
           .upsert({
             drug_id: drug.id,
             uses: medical.uses,
-            dosages: medical.dosages,
             side_effects: medical.sideEffects,
             warnings: medical.warnings,
             source_url: sourceUrl,
@@ -307,7 +316,7 @@ async function main(req: Request) {
         if (upsertError) throw upsertError;
       }
 
-      const needsReview = confidence < 0.90 || !(medical.uses.length || medical.dosages.length || medical.sideEffects.length || medical.warnings.length);
+      const needsReview = confidence < 0.90 || !(medical.uses.length || medical.sideEffects.length || medical.warnings.length);
       await adminClient
         .from("drug_medical_sync")
         .update({
