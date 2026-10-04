@@ -189,8 +189,6 @@ function fillForm(drug) {
   byId("medical-dosages").value = "";
   byId("side-effects").value = "";
   byId("warnings").value = "";
-  byId("image-url").value = "";
-  byId("image-source-name").value = "";
   byId("source-url").value = "";
   byId("source-name").value = "";
   byId("dialog-title").textContent = drug ? "تعديل دواء" : "إضافة دواء";
@@ -206,8 +204,6 @@ function fillMedicalForm(info) {
   byId("medical-dosages").value = (info?.dosages || []).join("\n");
   byId("side-effects").value = (info?.side_effects || []).join("\n");
   byId("warnings").value = (info?.warnings || []).join("\n");
-  byId("image-url").value = info?.image_url || "";
-  byId("image-source-name").value = info?.image_source_name || "";
   byId("source-url").value = info?.source_url || "";
   byId("source-name").value = info?.source_name || "";
 }
@@ -258,8 +254,6 @@ function drugPayload() {
 }
 
 function medicalPayload(drugId) {
-  const imageUrl = byId("image-url").value.trim();
-  const imageSourceName = byId("image-source-name").value.trim();
   const sourceUrl = byId("source-url").value.trim();
   const sourceName = byId("source-name").value.trim();
   return {
@@ -268,8 +262,6 @@ function medicalPayload(drugId) {
     dosages: medicalLines(byId("medical-dosages").value),
     side_effects: medicalLines(byId("side-effects").value),
     warnings: medicalLines(byId("warnings").value),
-    image_url: imageUrl || null,
-    image_source_name: imageSourceName || null,
     source_url: sourceUrl || null,
     source_name: sourceName || null
   };
@@ -277,7 +269,7 @@ function medicalPayload(drugId) {
 
 function hasMedicalContent(payload) {
   return payload.uses.length || payload.dosages.length || payload.side_effects.length || payload.warnings.length ||
-    payload.image_url || payload.image_source_name || payload.source_url || payload.source_name;
+    payload.source_url || payload.source_name;
 }
 
 async function saveMedicalInfo(drugId) {
