@@ -61,18 +61,31 @@ object SupabaseApi {
     }
 
     fun fetchDrugMedicalInfo(remoteId: Long): DrugMedicalInfo? {
-        val path = "/rest/v1/drug_medical_info?select=drug_id,uses,dosages,side_effects,warnings,source_url,source_name,confidence,updated_at&drug_id=eq.$remoteId&limit=1"
-        val result = JSONArray(request("GET", path))
+        val drug = JSONArray(
+            request(
+                "GET",
+                "/rest/v1/drugs?select=id,scientific_name& id=eq.$remoteId&limit=1".replace(" ", "")
+            )
+        )
+        if (drug.length() == 0) return null
+        val scientificName = drug.getJSONObject(0).optString("scientific_name")
+        if (scientificName.isBlank()) return null
+
+        val effective = request(
+            "GET",
+            "/rest/v1/drug_medical_effective?select=drug_id,uses,side_effects,source_url,source_name,updated_at&drug_id=eq.$remoteId&limit=1"
+        )
+        val result = JSONArray(effective)
         if (result.length() == 0) return null
         val row = result.getJSONObject(0)
+        val uses = row.optJsonStrings("uses")
+        val sideEffects = row.optJsonStrings("side_effects")
+        if (uses.isEmpty() && sideEffects.isEmpty()) return null
         return DrugMedicalInfo(
-            uses = row.optJsonStrings("uses"),
-            dosages = row.optJsonStrings("dosages"),
-            sideEffects = row.optJsonStrings("side_effects"),
-            warnings = row.optJsonStrings("warnings"),
+            uses = uses,
+            sideEffects = sideEffects,
             sourceUrl = row.optNullableString("source_url"),
             sourceName = row.optNullableString("source_name"),
-            confidence = row.optNullableDouble("confidence"),
             updatedAt = row.optNullableString("updated_at")
         )
     }
