@@ -1,28 +1,39 @@
 import React,{useEffect,useState} from "react";
 import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
 import{supabase}from"./src/lib/supabase";
+import{createSearchIndex,searchIndex}from"./src/searchEngine";
 I18nManager.allowRTL(true);
-const PAGE_SIZE=40,PHONE="01030950177";
+const PAGE_SIZE=1000,PHONE="01030950177";
 const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" ج.م";
 const route=v=>({"ORAL.SOLID":"أقراص / كبسولات","ORAL.LIQUID":"شراب / سائل للشرب",INJECTION:"حقن",TOPICAL:"موضعي",EFF:"فوار",SPRAY:"بخاخ",EYE:"للعين",VAGINAL:"مهبلي",MOUTH:"للفم",RECTAL:"شرجي / لبوس",SOAP:"صابون",EAR:"للأذن"}[String(v||"").toUpperCase()]||v||"غير محدد");
 export default function App(){
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[drugs,setDrugs]=useState([]),[selected,setSelected]=useState(null),[loading,setLoading]=useState(false),[more,setMore]=useState(false),[page,setPage]=useState(0),[error,setError]=useState("");
- async function search(term=query,kind=scope,p=0){
-  if(term.trim().length<2){setDrugs([]);setMore(false);setPage(0);setError("");return}
-  p===0?setLoading(true):null;setError("");
-  let q=supabase.from("drugs").select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,price_egp").order("id",{ascending:true}).range(p*PAGE_SIZE,p*PAGE_SIZE+PAGE_SIZE-1);
-  const x="%"+term.trim()+"%";q=kind==="ingredient"?q.ilike("scientific_name",x):q.or("commercial_name_en.ilike."+x+",commercial_name_ar.ilike."+x);
-  const r=await q;
-  if(r.error){setError(r.error.message);if(p===0)setDrugs([])}else{const rows=r.data||[];setDrugs(p?old=>[...old,...rows]:rows);setPage(p);setMore(rows.length===PAGE_SIZE)}
-  setLoading(false);
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[drugs,setDrugs]=useState([]),[selected,setSelected]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[index,setIndex]=useState([]);
+ async function loadDrugs(){
+  setLoading(true);setError("");
+  try{
+   const rows=[];
+   for(let from=0;;from+=PAGE_SIZE){
+    const r=await supabase.from("drugs").select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,price_egp").order("id",{ascending:true}).range(from,from+PAGE_SIZE-1);
+    if(r.error)throw r.error;
+    rows.push(...(r.data||[]));
+    if(!r.data||r.data.length<PAGE_SIZE)break;
+   }
+   setIndex(createSearchIndex(rows));
+  }catch(e){setError(e.message||"تعذر تحميل قاعدة البيانات");}
+  finally{setLoading(false);}
  }
- useEffect(()=>{const t=setTimeout(()=>search(),350);return()=>clearTimeout(t)},[query,scope]);
+ function search(term=query,kind=scope){
+  if(term.trim().length<2){setDrugs([]);return;}
+  setDrugs(searchIndex(index,term,kind,200));
+ }
+ useEffect(()=>{loadDrugs();},[]);
+ useEffect(()=>{if(index.length){const t=setTimeout(()=>search(),120);return()=>clearTimeout(t)}},[query,scope,index]);
  const card=({item})=><Pressable style={s.card} onPress={()=>setSelected(item)}><View style={s.main}><Text style={s.en}>{item.commercial_name_en||"-"}</Text>{item.commercial_name_ar?<Text style={s.ar}>{item.commercial_name_ar}</Text>:null}{item.scientific_name?<Text style={s.sc}>{item.scientific_name}</Text>:null}<Text style={s.co}>{item.manufacturer||"-"}</Text></View><Text style={s.price}>{price(item.price_egp)}</Text></Pressable>;
  return <SafeAreaView style={s.safe}><StatusBar barStyle="dark-content"/><View style={s.container}>
   <Text style={s.title}>دليل الأدوية المصرية</Text>
   <TextInput value={query} onChangeText={setQuery} placeholder="ابحث باسم البراند" placeholderTextColor="#7B8784" style={s.search} textAlign="right"/>
   <View style={s.chips}><Pressable style={[s.chip,scope==="brand"&&s.sel]} onPress={()=>setScope("brand")}><Text style={scope==="brand"?s.selText:s.chipText}>البراند</Text></Pressable><Pressable style={[s.chip,scope==="ingredient"&&s.sel]} onPress={()=>setScope("ingredient")}><Text style={scope==="ingredient"?s.selText:s.chipText}>المادة الفعالة</Text></Pressable></View>
-  {loading?<View style={s.center}><ActivityIndicator/><Text style={s.status}>جاري البحث...</Text></View>:error?<View style={s.center}><Text style={s.err}>تعذر تحميل قاعدة البيانات</Text><Text>{error}</Text><Pressable style={s.retry} onPress={()=>search()}><Text style={s.retryText}>إعادة المحاولة</Text></Pressable></View>:query.trim().length===0?<View style={s.center}><Text style={s.ready}>ابحث عن دواء</Text><Text style={s.status}>اكتب اسم البراند بالعربي أو الإنجليزي</Text></View>:query.trim().length===1?<View style={s.center}><Text style={s.status}>اكتب حرفين على الأقل.</Text></View>:drugs.length===0?<View style={s.center}><Text style={s.status}>مفيش نتايج.</Text></View>:<FlatList data={drugs} keyExtractor={x=>String(x.id)} renderItem={card} contentContainerStyle={s.list} onEndReached={()=>more&&search(query,scope,page+1)} onEndReachedThreshold={.7}/>}
+  {loading?<View style={s.center}><ActivityIndicator/><Text style={s.status}>جاري البحث...</Text></View>:error?<View style={s.center}><Text style={s.err}>تعذر تحميل قاعدة البيانات</Text><Text>{error}</Text><Pressable style={s.retry} onPress={()=>search()}><Text style={s.retryText}>إعادة المحاولة</Text></Pressable></View>:query.trim().length===0?<View style={s.center}><Text style={s.ready}>ابحث عن دواء</Text><Text style={s.status}>اكتب اسم البراند بالعربي أو الإنجليزي</Text></View>:query.trim().length===1?<View style={s.center}><Text style={s.status}>اكتب حرفين على الأقل.</Text></View>:drugs.length===0?<View style={s.center}><Text style={s.status}>مفيش نتايج.</Text></View>:<FlatList data={drugs} keyExtractor={x=>String(x.id)} renderItem={card} contentContainerStyle={s.list}/>}
  </View><View style={s.bottom}><Pressable onPress={()=>Linking.openURL("tel:"+PHONE)}><Text style={s.call}>للتواصل والإعلان اتصل بنا: {PHONE}</Text></Pressable></View>
  <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}><SafeAreaView style={s.safe}><View style={s.container}><Pressable onPress={()=>setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>{selected&&<View style={s.detail}><Text style={s.detailEn}>{selected.commercial_name_en}</Text><Text style={s.detailAr}>{selected.commercial_name_ar||"-"}</Text><Info l="المادة الفعالة" v={selected.scientific_name}/><Info l="الشركة" v={selected.manufacturer}/><Info l="التصنيف الدوائي" v={selected.drug_class}/><Info l="الشكل الدوائي" v={route(selected.route)}/><Info l="السعر" v={price(selected.price_egp)}/></View>}</View></SafeAreaView></Modal>
  </SafeAreaView>
