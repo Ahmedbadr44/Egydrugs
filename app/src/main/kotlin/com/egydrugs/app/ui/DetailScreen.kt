@@ -3,8 +3,6 @@
 package com.egydrugs.app.ui
 
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -32,14 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.egydrugs.app.core.Drug
-import com.egydrugs.app.core.DrugMedicalInfo
 
 @Composable
 fun DetailScreen(
@@ -74,16 +67,16 @@ fun DetailScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item(key = "header") { HeaderCard(drug, state.medicalInfo?.imageUrl) }
+            item(key = "header") { HeaderCard(drug) }
 
             if (state.medicalLoading) {
                 item(key = "medical-loading") {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                    }
+                    Text(
+                        Str.MEDICAL_LOADING,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -173,7 +166,7 @@ private fun SectionTitle(title: String, hint: String) {
 }
 
 @Composable
-private fun HeaderCard(drug: Drug, imageUrl: String?) {
+private fun HeaderCard(drug: Drug) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -181,22 +174,10 @@ private fun HeaderCard(drug: Drug, imageUrl: String?) {
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (!imageUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = drug.nameAr.ifBlank { drug.nameEn },
-                    modifier = Modifier.size(96.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
                 Text(drug.nameEn, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 if (drug.nameAr.isNotBlank() && drug.nameAr != drug.nameEn) {
                     Text(drug.nameAr, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -210,7 +191,6 @@ private fun HeaderCard(drug: Drug, imageUrl: String?) {
                 if (drug.dosage.isNotBlank()) {
                     InfoLine(Str.DOSAGE, drug.dosage)
                 }
-            }
         }
     }
 }
