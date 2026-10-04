@@ -64,17 +64,21 @@ object SupabaseApi {
         val result = JSONArray(
             request(
                 "GET",
-                "/rest/v1/drug_medical_effective?select=drug_id,uses,side_effects,source_url,source_name,updated_at&drug_id=eq.$remoteId&limit=1"
+                "/rest/v1/drug_medical_effective?select=drug_id,uses,dosage,side_effects,contraindications,source_url,source_name,updated_at&drug_id=eq.$remoteId&limit=1"
             )
         )
         if (result.length() == 0) return null
         val row = result.getJSONObject(0)
         val uses = row.optJsonStrings("uses")
+        val dosage = row.optJsonStrings("dosage")
         val sideEffects = row.optJsonStrings("side_effects")
-        if (uses.isEmpty() && sideEffects.isEmpty()) return null
+        val contraindications = row.optJsonStrings("contraindications")
+        if (uses.isEmpty() && dosage.isEmpty() && sideEffects.isEmpty() && contraindications.isEmpty()) return null
         return DrugMedicalInfo(
             uses = uses,
+            dosage = dosage,
             sideEffects = sideEffects,
+            contraindications = contraindications,
             sourceUrl = row.optNullableString("source_url"),
             sourceName = row.optNullableString("source_name"),
             updatedAt = row.optNullableString("updated_at")
