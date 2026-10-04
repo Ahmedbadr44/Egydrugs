@@ -178,17 +178,17 @@ private fun HeaderCard(drug: Drug) {
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-                Text(drug.nameEn, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                if (drug.nameAr.isNotBlank() && drug.nameAr != drug.nameEn) {
+            Text(drug.nameEn, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            if (drug.nameAr.isNotBlank() && drug.nameAr != drug.nameEn) {
                     Text(drug.nameAr, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                HorizontalDivider(Modifier.padding(vertical = 2.dp))
-                InfoLine(Str.SCIENTIFIC, drug.scientific.ifBlank { Str.NO_SCIENTIFIC })
+            HorizontalDivider(Modifier.padding(vertical = 2.dp))
+            InfoLine(Str.SCIENTIFIC, drug.scientific.ifBlank { Str.NO_SCIENTIFIC })
                 InfoLine(Str.MANUFACTURER, drug.manufacturer.ifBlank { "-" })
                 InfoLine(Str.DRUG_CLASS, drug.drugClass.trim().trim('.').ifBlank { "-" })
                 InfoLine(Str.FORM, Str.routeLabel(drug.route))
                 InfoLine(Str.PRICE, formatPrice(drug.price))
-                if (drug.dosage.isNotBlank()) {
+            if (drug.dosage.isNotBlank()) {
                     InfoLine(Str.DOSAGE, drug.dosage)
                 }
         }
