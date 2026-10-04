@@ -43,6 +43,11 @@ fun DetailScreen(
     onSameStrength: (Boolean) -> Unit
 ) {
     val drug = state.drug
+    val isTopical = drug.nameEn.contains("CREAM", ignoreCase = true) ||
+        drug.nameEn.contains("OINTMENT", ignoreCase = true) ||
+        drug.nameEn.contains("GEL", ignoreCase = true) ||
+        drug.route.contains("TOPICAL", ignoreCase = true) ||
+        drug.route.contains("DERMAL", ignoreCase = true)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -104,6 +109,18 @@ fun DetailScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+            }
+
+            if (isTopical) {
+                item(key = "topical-advice") {
+                    Text(
+                        "استشر طبيبك أو الصيدلي قبل استخدام الكريمات أو المراهم.",
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
