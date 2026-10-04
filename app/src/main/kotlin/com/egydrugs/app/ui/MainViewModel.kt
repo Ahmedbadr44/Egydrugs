@@ -116,7 +116,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val app = getApplication<Application>()
                 val version = withContext(Dispatchers.IO) { SupabaseApi.getDataVersion() }
-                if (version <= DrugRepository.savedRemoteVersion(app)) return
+                val prefs = app.getSharedPreferences("drug-sync", Application.MODE_PRIVATE)
+                val protocolSeen = prefs.getInt("sync_protocol", 0)
+                val forceRefresh = protocolSeen < syncProtocolVersion
+                if (!forceRefresh && version <= DrugRepository.savedRemoteVersion(app)) return
                 val drugs = withContext(Dispatchers.IO) { SupabaseApi.fetchDrugs() }
                 if (drugs.isEmpty() && DrugRepository.savedRemoteVersion(app) < 0) return
 
