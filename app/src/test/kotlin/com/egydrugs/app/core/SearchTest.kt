@@ -65,7 +65,7 @@ class SearchTest {
 
     @Test
     fun equivalentsShareTheActiveIngredient() {
-        val d = index.search("augmentin 1 gm", SearchScope.ENGLISH).first()
+        val d = index.search("augmentin 1 gm", SearchScope.BRAND).first()
         val eq = index.equivalents(d.id, sameRoute = true, sameStrength = true)
         assertTrue(eq.isNotEmpty())
         val key = Ingredients.key(d.scientific)
@@ -77,7 +77,7 @@ class SearchTest {
 
     @Test
     fun alternativesUseOtherIngredientsOfTheSameClass() {
-        val d = index.search("brufen 400", SearchScope.ENGLISH).first()
+        val d = index.search("brufen 400", SearchScope.BRAND).first()
         val alt = index.alternatives(d.id, sameRoute = true)
         assertTrue(alt.groups.isNotEmpty())
         val myKey = Ingredients.key(d.scientific)
