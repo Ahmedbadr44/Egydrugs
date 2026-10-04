@@ -61,7 +61,7 @@ object SupabaseApi {
     }
 
     fun fetchDrugMedicalInfo(remoteId: Long): DrugMedicalInfo? {
-        val path = "/rest/v1/drug_medical_info?select=drug_id,uses,dosages,side_effects,warnings,image_url,image_source_url,image_source_name,source_url,source_name,confidence,updated_at&drug_id=eq.$remoteId&limit=1"
+        val path = "/rest/v1/drug_medical_info?select=drug_id,uses,dosages,side_effects,warnings,source_url,source_name,confidence,updated_at&drug_id=eq.$remoteId&limit=1"
         val result = JSONArray(request("GET", path))
         if (result.length() == 0) return null
         val row = result.getJSONObject(0)
@@ -70,9 +70,6 @@ object SupabaseApi {
             dosages = row.optJsonStrings("dosages"),
             sideEffects = row.optJsonStrings("side_effects"),
             warnings = row.optJsonStrings("warnings"),
-            imageUrl = row.optNullableString("image_url"),
-            imageSourceUrl = row.optNullableString("image_source_url"),
-            imageSourceName = row.optNullableString("image_source_name"),
             sourceUrl = row.optNullableString("source_url"),
             sourceName = row.optNullableString("source_name"),
             confidence = row.optNullableDouble("confidence"),
