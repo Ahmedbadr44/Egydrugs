@@ -61,21 +61,12 @@ object SupabaseApi {
     }
 
     fun fetchDrugMedicalInfo(remoteId: Long): DrugMedicalInfo? {
-        val drug = JSONArray(
+        val result = JSONArray(
             request(
                 "GET",
-                "/rest/v1/drugs?select=id,scientific_name& id=eq.$remoteId&limit=1".replace(" ", "")
+                "/rest/v1/drug_medical_effective?select=drug_id,uses,side_effects,source_url,source_name,updated_at&drug_id=eq.$remoteId&limit=1"
             )
         )
-        if (drug.length() == 0) return null
-        val scientificName = drug.getJSONObject(0).optString("scientific_name")
-        if (scientificName.isBlank()) return null
-
-        val effective = request(
-            "GET",
-            "/rest/v1/drug_medical_effective?select=drug_id,uses,side_effects,source_url,source_name,updated_at&drug_id=eq.$remoteId&limit=1"
-        )
-        val result = JSONArray(effective)
         if (result.length() == 0) return null
         val row = result.getJSONObject(0)
         val uses = row.optJsonStrings("uses")
