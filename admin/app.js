@@ -318,6 +318,38 @@ async function saveDrug(event) {
   setNotice(id ? "تم تعديل الدواء والبيانات الطبية." : "تمت إضافة الدواء والبيانات الطبية.");
   await loadDrugs();
 }
+async function syncOpenFda() {
+  if (!client) return;
+  const button = byId("sync-openfda");
+  button.disabled = true;
+  setNotice("جاري مزامنة دفعة من بيانات OpenFDA...");
+  try {
+    const config = savedConfig();
+    const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    if (sessionError || !sessionData.session) {
+      throw sessionError || new Error("انتهت جلسة تسجيل الدخول.");
+    }
+
+    const response = await fetch(`${config.url}/functions/v1/openfda-sync`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${sessionData.session.access_token}`
+      },
+      body: JSON.stringify({ limit: 25 })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+
+    setNotice(`تمت مزامنة ${payload.processed || 0} دواء: نجاح ${payload.success || 0}، يحتاج مراجعة ${payload.needs_review || 0}، بدون تطابق ${payload.no_match || 0}، أخطاء ${payload.error || 0}.`);
+  } catch (error) {
+    setNotice(`تعذرت مزامنة OpenFDA: ${error.message}`, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function deleteDrug(id) {
   const drug = lastRows.find((item) => String(item.id) === String(id));
   if (!drug || !window.confirm(`حذف ${drug.commercial_name_en} نهائيًا؟`)) return;
@@ -366,6 +398,7 @@ function attachEvents() {
     if (error) { setNotice(`تعذر تسجيل الخروج: ${error.message}`, true); return; }
     show("login");
   });
+  byId("sync-openfda").addEventListener("click", syncOpenFda);
   byId("add-drug").addEventListener("click", () => openDialog());
   byId("close-dialog").addEventListener("click", () => dialog.close());
   byId("cancel-dialog").addEventListener("click", () => dialog.close());
