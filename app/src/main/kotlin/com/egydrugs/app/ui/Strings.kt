@@ -33,6 +33,7 @@ object Str {
     const val MEDICAL_DOSAGE = "الجرعات المعتادة"
     const val SIDE_EFFECTS = "الأعراض الجانبية المحتملة"
     const val WARNINGS = "التحذيرات والاحتياطات"
+    const val MEDICAL_LOADING = "جاري تحميل المعلومات الطبية..."
     const val MEDICAL_SOURCE = "المصدر: %s"
     const val UNKNOWN_SOURCE = "مصدر طبي موثوق"
     const val CURRENCY = "ج.م"
