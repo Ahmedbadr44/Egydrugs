@@ -120,6 +120,29 @@ function gapAllowed(hay,from,idx){
   return true;
 }
 
+// Match query segments against the phonetic key while allowing at most one
+// missing/extra character in each segment. This is the normal typo tolerance.
+function oneErrorOrderedFind(hay,segs){
+  if(!segs.length) return -1;
+  const words=hay.split(" ");
+  for(let w=0;w<words.length;w++){
+    let pos=w, start=0;
+    for(let n=0;n<segs.length;n++){
+      let found=-1;
+      for(let j=pos;j<words.length;j++){
+        if(j>pos && n===0) continue;
+        if(levenshtein(segs[n],words[j],1)<=1){ found=j; break; }
+        if(n>0 && j>pos && !gapAllowed(hay,0,0)) break;
+      }
+      if(found<0){start=-1;break;}
+      if(n===0)start=found;
+      pos=found+1;
+    }
+    if(start>=0) return hay.indexOf(words[start]);
+  }
+  return -1;
+}
+
 function levenshtein(a,b,max){
   if(Math.abs(a.length-b.length)>max) return max+1;
   let prev=Array.from({length:b.length+1},(_,i)=>i),cur=new Array(b.length+1);
@@ -168,9 +191,13 @@ function fieldScore(lit,pk,sk,q){
     const idx=orderedFind(pk,q.pk);
     if(idx>=0) tier=!q.anchored?6:idx===0?4:(pk[idx-1]===" "?5:6);
   }
+  if(tier<0&&pk&&q.pkLen>=2){
+    const idx=oneErrorOrderedFind(pk,q.pk);
+    if(idx>=0) tier=!q.anchored?7:(idx===0?7:8);
+  }
   if(tier<0&&sk&&q.skJoined.length>=2){
     const idx=orderedFind(sk,q.sk);
-    if(idx>=0) tier=q.anchored&&idx===0?7:8;
+    if(idx>=0) tier=q.anchored&&idx===0?9:10;
   }
   return tier<0?-1:tier*2;
 }
