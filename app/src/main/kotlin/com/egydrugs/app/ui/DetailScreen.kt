@@ -3,6 +3,8 @@
 package com.egydrugs.app.ui
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -29,10 +32,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.egydrugs.app.core.Drug
+import com.egydrugs.app.core.DrugMedicalInfo
 
 @Composable
 fun DetailScreen(
@@ -67,7 +74,45 @@ fun DetailScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item(key = "header") { HeaderCard(drug) }
+            item(key = "header") { HeaderCard(drug, state.medicalInfo?.imageUrl) }
+
+            if (state.medicalLoading) {
+                item(key = "medical-loading") {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    }
+                }
+            }
+
+            state.medicalInfo?.let { info ->
+                if (info.uses.isNotEmpty()) {
+                    item(key = "uses") { MedicalListSection(Str.USES, info.uses) }
+                }
+                if (info.dosages.isNotEmpty()) {
+                    item(key = "dosages") { MedicalListSection(Str.MEDICAL_DOSAGE, info.dosages) }
+                }
+                if (info.sideEffects.isNotEmpty()) {
+                    item(key = "side-effects") { MedicalListSection(Str.SIDE_EFFECTS, info.sideEffects) }
+                }
+                if (info.warnings.isNotEmpty()) {
+                    item(key = "warnings") { MedicalListSection(Str.WARNINGS, info.warnings) }
+                }
+                if (!info.sourceName.isNullOrBlank() || !info.sourceUrl.isNullOrBlank()) {
+                    item(key = "medical-source") {
+                        Text(
+                            Str.MEDICAL_SOURCE.format(
+                                info.sourceName ?: Str.UNKNOWN_SOURCE
+                            ),
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
 
             item(key = "disclaimer") {
                 Text(
@@ -128,7 +173,7 @@ private fun SectionTitle(title: String, hint: String) {
 }
 
 @Composable
-private fun HeaderCard(drug: Drug) {
+private fun HeaderCard(drug: Drug, imageUrl: String?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -136,18 +181,36 @@ private fun HeaderCard(drug: Drug) {
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(drug.nameEn, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            if (drug.nameAr.isNotBlank() && drug.nameAr != drug.nameEn) {
-                Text(drug.nameAr, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = drug.nameAr.ifBlank { drug.nameEn },
+                    modifier = Modifier.size(96.dp),
+                    contentScale = ContentScale.Crop
+                )
             }
-            HorizontalDivider(Modifier.padding(vertical = 2.dp))
-            InfoLine(Str.SCIENTIFIC, drug.scientific.ifBlank { Str.NO_SCIENTIFIC })
-            InfoLine(Str.MANUFACTURER, drug.manufacturer.ifBlank { "-" })
-            InfoLine(Str.DRUG_CLASS, drug.drugClass.trim().trim('.').ifBlank { "-" })
-            InfoLine(Str.FORM, Str.routeLabel(drug.route))
-            InfoLine(Str.PRICE, formatPrice(drug.price))
-            InfoLine(Str.DOSAGE, drug.dosage.ifBlank { Str.DOSAGE_FUTURE })
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(drug.nameEn, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                if (drug.nameAr.isNotBlank() && drug.nameAr != drug.nameEn) {
+                    Text(drug.nameAr, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                HorizontalDivider(Modifier.padding(vertical = 2.dp))
+                InfoLine(Str.SCIENTIFIC, drug.scientific.ifBlank { Str.NO_SCIENTIFIC })
+                InfoLine(Str.MANUFACTURER, drug.manufacturer.ifBlank { "-" })
+                InfoLine(Str.DRUG_CLASS, drug.drugClass.trim().trim('.').ifBlank { "-" })
+                InfoLine(Str.FORM, Str.routeLabel(drug.route))
+                InfoLine(Str.PRICE, formatPrice(drug.price))
+                if (drug.dosage.isNotBlank()) {
+                    InfoLine(Str.DOSAGE, drug.dosage)
+                }
+            }
         }
     }
 }
@@ -165,5 +228,30 @@ private fun InfoLine(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(value, modifier = Modifier.weight(0.64f), style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+
+@Composable
+private fun MedicalListSection(title: String, values: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            values.forEach { value ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("•", style = MaterialTheme.typography.bodyLarge)
+                    Text(value, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
     }
 }
