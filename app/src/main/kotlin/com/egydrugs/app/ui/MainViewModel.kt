@@ -32,7 +32,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val loading: Boolean = true,
         val error: String? = null,
         val query: String = "",
-        val scope: SearchScope = SearchScope.ALL,
+        val scope: SearchScope = SearchScope.BRAND,
         val results: List<Drug> = emptyList(),
         val tooShort: Boolean = false
     )
