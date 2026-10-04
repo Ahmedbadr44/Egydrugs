@@ -186,7 +186,7 @@ function fillForm(drug) {
   byId("price").value = drug?.price_egp ?? "";
   byId("dosage").value = drug?.dosage ?? "";
   byId("uses").value = "";
-  byId("medical-dosages").value = "";
+
   byId("side-effects").value = "";
   byId("warnings").value = "";
   byId("source-url").value = "";
@@ -201,7 +201,6 @@ function medicalLines(value) {
 
 function fillMedicalForm(info) {
   byId("uses").value = (info?.uses || []).join("\n");
-  byId("medical-dosages").value = (info?.dosages || []).join("\n");
   byId("side-effects").value = (info?.side_effects || []).join("\n");
   byId("warnings").value = (info?.warnings || []).join("\n");
   byId("source-url").value = info?.source_url || "";
@@ -259,9 +258,7 @@ function medicalPayload(drugId) {
   return {
     drug_id: Number(drugId),
     uses: medicalLines(byId("uses").value),
-    dosages: medicalLines(byId("medical-dosages").value),
     side_effects: medicalLines(byId("side-effects").value),
-    warnings: medicalLines(byId("warnings").value),
     source_url: sourceUrl || null,
     source_name: sourceName || null
   };
