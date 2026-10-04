@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.egydrugs.app.core.Drug
+import com.egydrugs.app.core.DrugMedicalInfo
 import com.egydrugs.app.core.DrugIndex
 import com.egydrugs.app.core.SearchScope
 import com.egydrugs.app.data.DrugRepository
@@ -43,7 +44,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val sameRoute: Boolean,
         val sameStrength: Boolean,
         val hasRoute: Boolean,
-        val hasStrength: Boolean
+        val hasStrength: Boolean,
+        val medicalInfo: DrugMedicalInfo? = null,
+        val medicalLoading: Boolean = false
     )
 
     private val _search = MutableStateFlow(SearchUi())
@@ -55,6 +58,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var index: DrugIndex? = null
     private var searchJob: Job? = null
     private var detailJob: Job? = null
+    private var medicalJob: Job? = null
     private val syncMutex = Mutex()
 
     /** Drugs opened one after another from the detail screen, so Back walks the path in reverse. */
@@ -168,6 +172,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         stack.removeAt(stack.size - 1)
         if (stack.isEmpty()) {
             detailJob?.cancel()
+            medicalJob?.cancel()
             _detail.value = null
         } else {
             refreshDetail()
@@ -191,16 +196,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val route = sameRoute
         val strength = sameStrength
         detailJob?.cancel()
+        medicalJob?.cancel()
         detailJob = viewModelScope.launch(Dispatchers.Default) {
-            val ui = DetailUi(
-                drug = idx.drug(id),
+            val drug = idx.drug(id)
+            _detail.value = DetailUi(
+                drug = drug,
                 equivalents = idx.equivalents(id, route, strength),
                 sameRoute = route,
                 sameStrength = strength,
                 hasRoute = idx.hasKnownRoute(id),
-                hasStrength = idx.hasStrength(id)
+                hasStrength = idx.hasStrength(id),
+                medicalLoading = drug.remoteId != null
             )
-            _detail.value = ui
+            val remoteId = drug.remoteId ?: return@launch
+            medicalJob = launch(Dispatchers.IO) {
+                val medical = runCatching { SupabaseApi.fetchDrugMedicalInfo(remoteId) }.getOrNull()
+                if (stack.lastOrNull() == id && _detail.value?.drug?.remoteId == remoteId) {
+                    _detail.update {
+                        it.copy(medicalInfo = medical, medicalLoading = false)
+                    }
+                }
+            }
         }
     }
 }
