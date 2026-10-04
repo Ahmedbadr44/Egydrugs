@@ -2,6 +2,7 @@ package com.egydrugs.app.data
 
 import com.egydrugs.app.BuildConfig
 import com.egydrugs.app.core.Drug
+import com.egydrugs.app.core.DrugMedicalInfo
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -59,6 +60,26 @@ object SupabaseApi {
         return result
     }
 
+    fun fetchDrugMedicalInfo(remoteId: Long): DrugMedicalInfo? {
+        val path = "/rest/v1/drug_medical_info?select=drug_id,uses,dosages,side_effects,warnings,image_url,image_source_url,image_source_name,source_url,source_name,confidence,updated_at&drug_id=eq.$remoteId&limit=1"
+        val result = JSONArray(request("GET", path))
+        if (result.length() == 0) return null
+        val row = result.getJSONObject(0)
+        return DrugMedicalInfo(
+            uses = row.optJsonStrings("uses"),
+            dosages = row.optJsonStrings("dosages"),
+            sideEffects = row.optJsonStrings("side_effects"),
+            warnings = row.optJsonStrings("warnings"),
+            imageUrl = row.optNullableString("image_url"),
+            imageSourceUrl = row.optNullableString("image_source_url"),
+            imageSourceName = row.optNullableString("image_source_name"),
+            sourceUrl = row.optNullableString("source_url"),
+            sourceName = row.optNullableString("source_name"),
+            confidence = row.optNullableDouble("confidence"),
+            updatedAt = row.optNullableString("updated_at")
+        )
+    }
+
     private fun request(
         method: String,
         path: String,
@@ -90,4 +111,19 @@ object SupabaseApi {
 
     private fun JSONObject.optNullableDouble(name: String): Double? =
         if (isNull(name)) null else optDouble(name).takeIf { it.isFinite() }
+
+    private fun JSONObject.optNullableString(name: String): String? =
+        if (isNull(name)) null else optString(name).takeIf { it.isNotBlank() }
+
+    private fun JSONObject.optJsonStrings(name: String): List<String> {
+        val value = optJSONArray(name) ?: return emptyList()
+        return buildList(value.length()) {
+            for (i in 0 until value.length()) {
+                when (val item = value.opt(i)) {
+                    is String -> item.trim().takeIf { it.isNotBlank() }?.let(::add)
+                    is JSONObject -> item.optString("text").trim().takeIf { it.isNotBlank() }?.let(::add)
+                }
+            }
+        }
+    }
 }
