@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Egydrugs",
+    "slug": "egydrugs",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "android": { "package": "com.egydrugs.app" },
+    "ios": { "bundleIdentifier": "com.egydrugs.app" }
+  }
+}
