@@ -156,6 +156,9 @@ function updateIngredientTargets(){
     const option=document.createElement("option");
     option.value=key;option.textContent=key;select.append(option);
   });
+  if(keys.length===1 && byId("drug-id").value && !byId("propagate-medical").checked && !byId("scientific-name").matches(":focus")){
+    byId("propagate-medical").checked=true;
+  }
   wrap.hidden=!keys.length||!byId("propagate-medical").checked;
 }
 function fillForm(drug){
