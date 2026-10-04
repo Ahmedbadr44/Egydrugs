@@ -124,7 +124,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 if (drugs.isEmpty() && DrugRepository.savedRemoteVersion(app) < 0) return
 
                 val previous = index
-                val updated = DrugRepository.replaceWithRemote(app, drugs, version)\n                prefs.edit().putInt("sync_protocol", syncProtocolVersion).apply()
+                val updated = DrugRepository.replaceWithRemote(app, drugs, version)
+                prefs.edit().putInt("sync_protocol", syncProtocolVersion).apply()
                 if (stack.isNotEmpty()) {
                     val oldDrugs = stack.mapNotNull { previous?.items?.getOrNull(it)?.drug }
                     val idByRemote = updated.items.mapNotNull { item ->
