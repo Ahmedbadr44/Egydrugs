@@ -87,17 +87,9 @@ fun DetailScreen(
             state.medicalInfo?.let { info ->
                 if (info.uses.isNotEmpty()) {
                     item(key = "uses") { MedicalListSection(Str.USES, info.uses) }
-                }
-                if (info.dosages.isNotEmpty()) {
-                    item(key = "dosages") { MedicalListSection(Str.MEDICAL_DOSAGE, info.dosages) }
-                }
-                if (info.sideEffects.isNotEmpty()) {
+                }                if (info.sideEffects.isNotEmpty()) {
                     item(key = "side-effects") { MedicalListSection(Str.SIDE_EFFECTS, info.sideEffects) }
-                }
-                if (info.warnings.isNotEmpty()) {
-                    item(key = "warnings") { MedicalListSection(Str.WARNINGS, info.warnings) }
-                }
-                if (!info.sourceName.isNullOrBlank() || !info.sourceUrl.isNullOrBlank()) {
+                }                if (!info.sourceName.isNullOrBlank() || !info.sourceUrl.isNullOrBlank()) {
                     item(key = "medical-source") {
                         Text(
                             Str.MEDICAL_SOURCE.format(
