@@ -23,10 +23,7 @@
       <section class="workspace" aria-label="الأدوية">
         <div class="toolbar">
           <label class="search-field"><i data-lucide="search" aria-hidden="true"></i><input id="search" type="search" placeholder="ابحث بالاسم أو المادة الفعالة" autocomplete="off" /></label>
-          <div class="toolbar-actions">
-            <button id="sync-openfda" class="secondary-button" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i>مزامنة OpenFDA</button>
-            <button id="add-drug" class="primary-button" type="button"><i data-lucide="plus" aria-hidden="true"></i>إضافة دواء</button>
-          </div>
+          <button id="add-drug" class="primary-button" type="button"><i data-lucide="plus" aria-hidden="true"></i>إضافة دواء</button>
         </div>
         <p id="notice" class="notice" role="status" aria-live="polite"></p>
         <div class="table-wrap">
@@ -82,7 +79,8 @@
           <label class="full-width">الجرعة<input id="dosage" /></label>
           <label class="full-width">الاستخدامات <small>(اكتب كل استخدام في سطر)</small><textarea id="uses" rows="4" placeholder="الاستخدام الأول&#10;الاستخدام الثاني"></textarea></label>
           <label class="full-width">الأعراض الجانبية المحتملة <small>(اكتب كل عرض في سطر)</small><textarea id="side-effects" rows="4" placeholder="صداع&#10;غثيان"></textarea></label>
-          <label class="full-width">التحذيرات والاحتياطات <small>(اكتب كل تحذير في سطر)</small><textarea id="warnings" rows="4"></textarea></label>
+          <label class="full-width"><input id="propagate-medical" type="checkbox" /> تطبيق الاستخدامات والأعراض الجانبية على كل الأدوية التي تحتوي على المادة الفعالة المختارة.</label>
+          <label id="ingredient-target-wrap" class="full-width" hidden>المادة الفعالة التي سيتم التعميم عليها<select id="ingredient-target"></select><small>سيتم التعميم على كل المنتجات التي يظهر فيها اسم المادة الفعالة.</small></label>
           <label>رابط المصدر الطبي<input id="source-url" type="url" placeholder="https://..." /></label>
           <label>اسم المصدر الطبي<input id="source-name" placeholder="مثال: النشرة المعتمدة" /></label>
         </div>
