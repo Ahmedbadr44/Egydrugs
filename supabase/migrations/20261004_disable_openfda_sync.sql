@@ -1,0 +1,1 @@
+drop table if exists public.drug_medical_sync cascade;
