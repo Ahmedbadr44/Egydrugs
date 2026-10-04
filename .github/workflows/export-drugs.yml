@@ -1,0 +1,68 @@
+name: Export full drug list
+
+on:
+  push:
+    paths:
+      - ".github/workflows/export-drugs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Export drugs from Supabase
+        env:
+          SUPABASE_URL: https://lfxdgtbsmomafyaolndh.supabase.co
+          SUPABASE_KEY: sb_publishable_A9K53JorCDERk7MtJG5wiw_z_Jm0bX0
+        run: |
+          python3 - <<'PY'
+          import csv, json, os, urllib.request
+
+          base = os.environ["SUPABASE_URL"]
+          key = os.environ["SUPABASE_KEY"]
+          out = "egydrugs_full_english_arabic_price.csv"
+          rows = []
+          offset = 0
+          page = 1000
+
+          while True:
+              url = (
+                  base + "/rest/v1/drugs"
+                  "?select=commercial_name_en,commercial_name_ar,price_egp"
+                  "&order=id.asc"
+                  f"&limit={page}&offset={offset}"
+              )
+              req = urllib.request.Request(
+                  url,
+                  headers={"apikey": key, "Authorization": f"Bearer {key}"}
+              )
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  data = json.load(resp)
+              rows.extend(data)
+              if len(data) < page:
+                  break
+              offset += page
+
+          with open(out, "w", encoding="utf-8-sig", newline="") as f:
+              writer = csv.writer(f)
+              writer.writerow(["English Name", "Arabic Name", "Price EGP"])
+              for r in rows:
+                  writer.writerow([
+                      r.get("commercial_name_en") or "",
+                      r.get("commercial_name_ar") or "",
+                      r.get("price_egp") if r.get("price_egp") is not None else ""
+                  ])
+
+          print(f"Exported {len(rows)} rows to {out}")
+          PY
+
+      - name: Upload CSV artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: egydrugs-full-drug-list
+          path: egydrugs_full_english_arabic_price.csv
+          if-no-files-found: error
+          retention-days: 7
