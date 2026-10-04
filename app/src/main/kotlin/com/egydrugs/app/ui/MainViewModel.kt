@@ -213,7 +213,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val medical = runCatching { SupabaseApi.fetchDrugMedicalInfo(remoteId) }.getOrNull()
                 if (stack.lastOrNull() == id && _detail.value?.drug?.remoteId == remoteId) {
                     _detail.update {
-                        it.copy(medicalInfo = medical, medicalLoading = false)
+                        it?.copy(medicalInfo = medical, medicalLoading = false)
                     }
                 }
             }
