@@ -13,6 +13,7 @@ let hasMore = false;
 let lastRows = [];
 let searchTimer;
 let fieldOptionsPromise;
+let medicalLoaded = true;
 
 const drugFieldOptions = [
   { field: "manufacturer", datalistId: "manufacturer-options", hintId: "manufacturer-hint", loadingText: "الشركة", emptyText: "اكتب شركة جديدة." },
@@ -184,10 +185,52 @@ function fillForm(drug) {
   byId("route").value = drug?.route ?? "";
   byId("price").value = drug?.price_egp ?? "";
   byId("dosage").value = drug?.dosage ?? "";
+  byId("uses").value = "";
+  byId("medical-dosages").value = "";
+  byId("side-effects").value = "";
+  byId("warnings").value = "";
+  byId("image-url").value = "";
+  byId("image-source-name").value = "";
+  byId("source-url").value = "";
+  byId("source-name").value = "";
   byId("dialog-title").textContent = drug ? "تعديل دواء" : "إضافة دواء";
   byId("dialog-error").textContent = "";
 }
-function openDialog(drug) {
+
+function medicalLines(value) {
+  return value.split("\n").map((line) => line.trim()).filter(Boolean);
+}
+
+function fillMedicalForm(info) {
+  byId("uses").value = (info?.uses || []).join("\n");
+  byId("medical-dosages").value = (info?.dosages || []).join("\n");
+  byId("side-effects").value = (info?.side_effects || []).join("\n");
+  byId("warnings").value = (info?.warnings || []).join("\n");
+  byId("image-url").value = info?.image_url || "";
+  byId("image-source-name").value = info?.image_source_name || "";
+  byId("source-url").value = info?.source_url || "";
+  byId("source-name").value = info?.source_name || "";
+}
+
+async function loadMedicalInfo(drugId) {
+  if (!drugId) {
+    medicalLoaded = true;
+    return;
+  }
+  medicalLoaded = false;
+  byId("dialog-error").textContent = "جاري تحميل البيانات الطبية...";
+  const { data, error } = await client
+    .from("drug_medical_info")
+    .select("uses,dosages,side_effects,warnings,image_url,image_source_name,source_url,source_name")
+    .eq("drug_id", drugId)
+    .maybeSingle();
+  if (error) throw error;
+  fillMedicalForm(data);
+  medicalLoaded = true;
+  byId("dialog-error").textContent = "";
+}
+
+async function openDialog(drug) {
   fillForm(drug);
   dialog.showModal();
   byId("name-en").focus();
@@ -197,6 +240,12 @@ function openDialog(drug) {
   loadDrugFieldOptions().catch((error) => {
     byId("dialog-error").textContent = `تعذر تحميل خيارات القوائم: ${error.message} يمكنك كتابة قيم جديدة يدويًا.`;
   });
+  try {
+    await loadMedicalInfo(drug?.id);
+  } catch (error) {
+    medicalLoaded = false;
+    byId("dialog-error").textContent = `تعذر تحميل البيانات الطبية: ${error.message}`;
+  }
 }
 function drugPayload() {
   const rawPrice = byId("price").value.trim();
@@ -207,14 +256,74 @@ function drugPayload() {
     price_egp: rawPrice === "" ? null : Number(rawPrice), dosage: byId("dosage").value.trim()
   };
 }
+
+function medicalPayload(drugId) {
+  const imageUrl = byId("image-url").value.trim();
+  const imageSourceName = byId("image-source-name").value.trim();
+  const sourceUrl = byId("source-url").value.trim();
+  const sourceName = byId("source-name").value.trim();
+  return {
+    drug_id: Number(drugId),
+    uses: medicalLines(byId("uses").value),
+    dosages: medicalLines(byId("medical-dosages").value),
+    side_effects: medicalLines(byId("side-effects").value),
+    warnings: medicalLines(byId("warnings").value),
+    image_url: imageUrl || null,
+    image_source_name: imageSourceName || null,
+    source_url: sourceUrl || null,
+    source_name: sourceName || null
+  };
+}
+
+function hasMedicalContent(payload) {
+  return payload.uses.length || payload.dosages.length || payload.side_effects.length || payload.warnings.length ||
+    payload.image_url || payload.image_source_name || payload.source_url || payload.source_name;
+}
+
+async function saveMedicalInfo(drugId) {
+  const payload = medicalPayload(drugId);
+  if (hasMedicalContent(payload)) {
+    const { error } = await client.from("drug_medical_info").upsert(payload, { onConflict: "drug_id" });
+    if (error) throw error;
+  } else {
+    const { error } = await client.from("drug_medical_info").delete().eq("drug_id", drugId);
+    if (error) throw error;
+  }
+}
+
 async function saveDrug(event) {
   event.preventDefault();
+  if (!medicalLoaded) {
+    byId("dialog-error").textContent = "بيانات الدواء الطبية لم تكتمل بعد. أغلق النافذة وافتحها مرة أخرى.";
+    return;
+  }
   const payload = drugPayload();
+  if (payload.price_egp !== null && (!Number.isFinite(payload.price_egp) || payload.price_egp < 0)) {
+    byId("dialog-error").textContent = "السعر غير صحيح.";
+    return;
+  }
   const id = byId("drug-id").value;
-  const { error } = id ? await client.from("drugs").update(payload).eq("id", id) : await client.from("drugs").insert(payload);
-  if (error) { byId("dialog-error").textContent = `تعذر الحفظ: ${error.message}`; return; }
+  let savedId = id;
+  let error;
+  if (id) {
+    ({ error } = await client.from("drugs").update(payload).eq("id", id));
+  } else {
+    const result = await client.from("drugs").insert(payload).select("id").single();
+    savedId = result.data?.id;
+    error = result.error;
+  }
+  if (error || !savedId) {
+    byId("dialog-error").textContent = `تعذر حفظ الدواء: ${error?.message || "تعذر معرفة رقم الدواء بعد الحفظ"}`;
+    return;
+  }
+  try {
+    await saveMedicalInfo(savedId);
+  } catch (medicalError) {
+    byId("dialog-error").textContent = `تم حفظ الدواء لكن تعذر حفظ البيانات الطبية: ${medicalError.message}`;
+    return;
+  }
   dialog.close();
-  setNotice(id ? "تم تعديل الدواء." : "تمت إضافة الدواء.");
+  setNotice(id ? "تم تعديل الدواء والبيانات الطبية." : "تمت إضافة الدواء والبيانات الطبية.");
   await loadDrugs();
 }
 async function deleteDrug(id) {
