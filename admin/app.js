@@ -217,7 +217,7 @@ async function loadMedicalInfo(drugId) {
   byId("dialog-error").textContent = "جاري تحميل البيانات الطبية...";
   const { data, error } = await client
     .from("drug_medical_info")
-    .select("uses,dosages,side_effects,warnings,image_url,image_source_name,source_url,source_name")
+    .select("uses,dosages,side_effects,warnings,source_url,source_name")
     .eq("drug_id", drugId)
     .maybeSingle();
   if (error) throw error;
