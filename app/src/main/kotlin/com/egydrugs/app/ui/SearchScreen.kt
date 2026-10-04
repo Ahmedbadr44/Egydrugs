@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -66,6 +67,13 @@ fun SearchScreen(
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
+
+    // Always return to the top when the search query or search scope changes.
+    // Without this, LazyColumn keeps the previous scroll position and a new
+    // result set can appear to start from the middle.
+    LaunchedEffect(state.query, state.scope) {
+        listState.scrollToItem(0)
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
