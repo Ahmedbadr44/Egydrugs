@@ -208,7 +208,11 @@ export function searchIndex(items,raw,scope="brand",limit=200){
     }else score=fieldScore(d.litSci,d.pkSci,d.skSci,q);
     if(score>=0){hits.push({index:i,score});flagged[i]=true;}
   }
-  if(hits.length<10&&q.skJoined.length>=3){
+  // Keep fuzzy fallback conservative for multi-word queries. The normal matcher already
+  // supports missing letters between ordered segments (for example "pa ado" or "par cetamol").
+  // Fuzzy matching a whole multi-word phrase can create unrelated hits such as matching
+  // a spoken phrase like "one two three" to arbitrary short drug names.
+  if(hits.length<10&&q.skJoined.length>=3&&q.lit.length===1){
     for(let i=0;i<items.length;i++){
       if(flagged[i])continue;
       const d=fuzzyDistance(items[i],q,scope);
