@@ -87,7 +87,7 @@ fun DetailScreen(
             state.medicalInfo?.let { info ->
                 if (info.uses.isNotEmpty()) {
                     item(key = "uses") {
-                        MedicalListSection("Uses", info.uses)
+                        MedicalListSection(if (drug.productType.equals("COSMETIC", ignoreCase = true)) "Cosmetic Uses" else "Medical Uses", info.uses)
                     }
                 }
                 if (info.dosage.isNotEmpty()) {
