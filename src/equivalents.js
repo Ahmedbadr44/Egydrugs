@@ -90,19 +90,20 @@ export function dosageFormOf(name=""){
  return "unknown";
 }
 
-export function getEquivalents(rows,selected,{sameForm=false,sameStrength=false}={}){
+export function getEquivalents(rows,selected,{sameRoute=false,sameStrength=false}={}){
  const selectedIng=ingredientKey(selected?.scientific_name||selected?.ingredient||"");
  if(!selectedIng) return [];
  const selectedStrength=strengthOf(selected?.commercial_name_en||selected?.nameEn||"");
- const selectedForm=dosageFormOf(selected?.commercial_name_en||selected?.nameEn||"");
+ const selectedRoute=String(selected?.route||"").trim().toUpperCase();
+ const selectedHasRoute=selectedRoute!==""&&selectedRoute!=="UNKNOWN";
  return rows
   .filter(row=>{
    if(String(row.id)===String(selected.id)) return false;
    const ing=ingredientKey(row.scientific_name||row.ingredient||"");
    if(!ing||ing!==selectedIng) return false;
-   if(sameForm){
-    const otherForm=dosageFormOf(row.commercial_name_en||row.nameEn||"");
-    if(!selectedForm||!otherForm||selectedForm!==otherForm) return false;
+   if(sameRoute&&selectedHasRoute){
+    const otherRoute=String(row.route||"").trim().toUpperCase();
+    if(!otherRoute||otherRoute==="UNKNOWN"||otherRoute!==selectedRoute) return false;
    }
    if(sameStrength&&selectedStrength.length){
     const otherStrength=strengthOf(row.commercial_name_en||row.nameEn||"");
