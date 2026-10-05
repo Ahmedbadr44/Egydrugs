@@ -33,7 +33,7 @@ object SupabaseApi {
             val page = JSONArray(
                 request(
                     "GET",
-                    "/rest/v1/drugs?select=id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,price_egp,dosage&order=id.asc",
+                    "/rest/v1/drugs?select=id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,price_egp,dosage,product_type&order=id.asc",
                     headers = mapOf("Range-Unit" to "items", "Range" to "$offset-$end")
                 )
             )
