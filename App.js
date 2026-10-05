@@ -11,7 +11,7 @@ const route=v=>({"ORAL.SOLID":"أقراص / كبسولات","ORAL.LIQUID":"شر�
 
 export default function App(){
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
- const[doseQuery,setDoseQuery]=useState(""),[doseSelected,setDoseSelected]=useState(null),[doseInfo,setDoseInfo]=useState(null),[doseLoading,setDoseLoading]=useState(false),[doseError,setDoseError]=useState("");
+ const[doseQuery,setDoseQuery]=useState(""),[doseScope,setDoseScope]=useState("brand"),[doseSelected,setDoseSelected]=useState(null),[doseInfo,setDoseInfo]=useState(null),[doseLoading,setDoseLoading]=useState(false),[doseError,setDoseError]=useState("");
 
  async function loadDrugs(){
   setLoading(true);setError("");
@@ -70,26 +70,26 @@ export default function App(){
  </Pressable>;
 
 
- const doseMedicines=useMemo(()=>medicines.filter(item=>!/[+;,\/]/.test(String(item.ingredient||""))),[medicines]);
- const doseSearch=useDrugSearch(doseMedicines,doseQuery,"brand",{debounceMs:120,limit:30});
+ const doseSearch=useDrugSearch(medicines,doseQuery,doseScope,{debounceMs:150,limit:200});
  const doseResults=useMemo(()=>doseSearch.hits.map(h=>h.item),[doseSearch.hits]);
  const selectDoseDrug=async item=>{
   setDoseSelected(item);setDoseInfo(null);setDoseError("");
   const key=ingredientKey(item.ingredient||"");
   if(!key){setDoseError("تعذر تحديد المادة الفعالة لهذا المنتج.");return;}
   if(String(item.productType||"").toUpperCase()==="COSMETIC"){setDoseError("هذا المنتج مستحضر تجميلي وليس له جرعة دوائية.");return;}
+  const isCombination=/[+;,\/]/.test(String(item.ingredient||""));
   setDoseLoading(true);
   const r=await supabase.from("dosage_reference")
    .select("ingredient_key,display_name,adult_dose,pediatric_dose,pregnancy_safety,lactation_safety,side_effects,source_name,source_url")
    .eq("ingredient_key",key)
-   .eq("is_combination",false)
+   .eq("is_combination",isCombination)
    .maybeSingle();
   if(r.error) setDoseError(r.error.message||"تعذر تحميل بيانات الجرعة.");
   else if(!r.data) setDoseError("لا توجد بيانات جرعة لهذه المادة الفعالة حاليًا.");
   else setDoseInfo(r.data);
   setDoseLoading(false);
  };
- const resetDose=()=>{setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");};
+ const resetDose=()=>{setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");setDoseScope("brand");};
  return <SafeAreaView style={s.safe}>
   <StatusBar barStyle="dark-content"/>
   <View style={s.container}>
@@ -220,8 +220,17 @@ export default function App(){
       <ScrollView contentContainerStyle={s.toolScroll}>
        <View style={s.toolPage}>
         <Text style={s.toolTitle}>حساب الجرعات</Text>
-        <Text style={s.toolHint}>ابحث عن الدواء، ثم راجع جرعة مادته الفعالة والمعلومات المرجعية المتاحة.</Text>
-        <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder="ابحث عن اسم الدواء" placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
+        <Text style={s.toolHint}>ابحث بنفس طريقة البحث الأساسية، ثم اختر الدواء لمراجعة الجرعة والمعلومات المرجعية المتاحة.</Text>
+        <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"اكتب المادة الفعالة بالإنجليزية":"اكتب اسم البراند بالعربي أو الإنجليزي"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
+        <View style={s.chips}>
+         <Pressable style={[s.chip,doseScope==="brand"&&s.sel]} onPress={()=>{setDoseScope("brand");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
+          <Text style={doseScope==="brand"?s.selText:s.chipText}>البراند</Text>
+         </Pressable>
+         <Pressable style={[s.chip,doseScope==="ingredient"&&s.sel]} onPress={()=>{setDoseScope("ingredient");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
+          <Text style={doseScope==="ingredient"?s.selText:s.chipText}>المادة الفعالة</Text>
+         </Pressable>
+        </View>
+        {doseSearch.notice==="ingredient-english-only" ? <Text style={s.doseError}>البحث بالمادة الفعالة بالإنجليزية فقط.</Text> : null}
         {doseQuery.trim().length>1&&!doseSelected ? (
          <View style={s.doseResults}>
           {doseResults.slice(0,20).map(item=><Pressable key={String(item.id)} style={s.doseResult} onPress={()=>selectDoseDrug(item)}>
