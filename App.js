@@ -6,8 +6,8 @@ import{useDrugSearch}from"./src/search/useDrugSearch";
 import{getEquivalents,ingredientKey}from"./src/equivalents";
 I18nManager.allowRTL(true);
 const PAGE_SIZE=1000,PHONE="01030950177";
-const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" ج.م";
-const route=v=>({"ORAL.SOLID":"Tablets / Capsules","ORAL.LIQUID":"Oral Liquid","INJECTION":"Injection",TOPICAL:"Topical",EFF:"Effervescent",SPRAY:"Spray",EYE:"Ophthalmic",VAGINAL:"Vaginal",MOUTH:"Oral",RECTAL:"Rectal",SOAP:"Soap",EAR:"Otic"}[String(v||"").toUpperCase()]||v||"غير محدد");
+const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
+const route=v=>({"ORAL.SOLID":"Tablets / Capsules","ORAL.LIQUID":"Oral Liquid","INJECTION":"Injection",TOPICAL:"Topical",EFF:"Effervescent",SPRAY:"Spray",EYE:"Ophthalmic",VAGINAL:"Vaginal",MOUTH:"Oral",RECTAL:"Rectal",SOAP:"Soap",EAR:"Otic"}[String(v||"").toUpperCase()]||v||"Unknown");
 
 export default function App(){
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
@@ -37,7 +37,7 @@ export default function App(){
     route:r.route||"",
     productType:r.product_type||""
    })));
-  }catch(e){setError(e.message||"تعذر تحميل قاعدة البيانات");}
+  }catch(e){setError(e.message||"Unable to load drug database");}
   finally{setLoading(false);}
  }
 
@@ -75,8 +75,8 @@ export default function App(){
  const selectDoseDrug=async item=>{
   setDoseSelected(item);setDoseInfo(null);setDoseError("");
   const key=ingredientKey(item.ingredient||"");
-  if(!key){setDoseError("تعذر تحديد المادة الفعالة لهذا المنتج.");return;}
-  if(String(item.productType||"").toUpperCase()==="COSMETIC"){setDoseError("هذا المنتج مستحضر تجميلي وليس له جرعة دوائية.");return;}
+  if(!key){setDoseError("Unable to identify the active ingredient for this product.");return;}
+  if(String(item.productType||"").toUpperCase()==="COSMETIC"){setDoseError("This product is a cosmetic and has no drug dose.");return;}
   const isCombination=/[+;,\/]/.test(String(item.ingredient||""));
   setDoseLoading(true);
   const r=await supabase.from("dosage_reference")
@@ -84,8 +84,8 @@ export default function App(){
    .eq("ingredient_key",key)
    .eq("is_combination",isCombination)
    .maybeSingle();
-  if(r.error) setDoseError(r.error.message||"تعذر تحميل بيانات الجرعة.");
-  else if(!r.data) setDoseError("لا توجد بيانات جرعة لهذه المادة الفعالة حاليًا.");
+  if(r.error) setDoseError(r.error.message||"Unable to load dosing data.");
+  else if(!r.data) setDoseError("No dosing reference is currently available for this active ingredient.");
   else setDoseInfo(r.data);
   setDoseLoading(false);
  };
@@ -95,7 +95,7 @@ export default function App(){
   <View style={s.container}>
    <View style={s.headerRow}>
     <Text style={s.title}>EgyMeds</Text>
-    <Pressable style={s.menuButton} onPress={()=>setMenuOpen(true)} accessibilityLabel="القائمة">
+    <Pressable style={s.menuButton} onPress={()=>setMenuOpen(true)} accessibilityLabel="Menu">
      <Text style={s.menuIcon}>☰</Text>
     </Pressable>
    </View>
@@ -151,7 +151,6 @@ export default function App(){
       <View style={s.detail}>
        <Text style={s.detailLabel}>Drug Name</Text>
        <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
-       <Text style={s.detailAr}>{selected.nameEn||"-"}</Text>
        <Info l="Active Ingredient" v={selected.ingredient}/>
        <Info l="Manufacturer" v={selected.manufacturer}/>
        <Info l="Drug Class" v={selected.drugClass}/>
@@ -220,8 +219,8 @@ export default function App(){
       <ScrollView contentContainerStyle={s.toolScroll}>
        <View style={s.toolPage}>
         <Text style={s.toolTitle}>Drug Dosing Reference</Text>
-        <Text style={s.toolHint}>Use the same search engine as the main search, then select a product to review its dosing and clinical reference data.</Text>
-        <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"Search active ingredient in English":"Search brand name in Arabic or English"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
+        <Text style={s.toolHint}>Use the same search engine as the main search, then select a product to review dosing and clinical reference data.</Text>
+        <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"Search active ingredient in English":"Search brand name"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
         <View style={s.chips}>
          <Pressable style={[s.chip,doseScope==="brand"&&s.sel]} onPress={()=>{setDoseScope("brand");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
           <Text style={doseScope==="brand"?s.selText:s.chipText}>Brand</Text>
@@ -269,7 +268,7 @@ export default function App(){
      ) : (
       <View style={s.toolPage}>
        <Text style={s.toolTitle}>{toolScreen==="guide"?"Drug Guide":toolScreen==="prices"?"Price Updates":"Cosmetics Guide"}</Text>
-       <Text style={s.toolHint}>{toolScreen==="guide"?"قسم Drug Guide جاهز للمرحلة التالية.":toolScreen==="prices"?"قسم Price Updates جاهز للمرحلة التالية.":"قسم Cosmetics Guide جاهز للمرحلة التالية."}</Text>
+       <Text style={s.toolHint}>{toolScreen==="guide"?"Drug Guide is ready for the next implementation phase.":toolScreen==="prices"?"Price Updates is ready for the next implementation phase.":"Cosmetics Guide is ready for the next implementation phase."}</Text>
       </View>
      )}
     </View>
@@ -280,7 +279,7 @@ export default function App(){
    <SafeAreaView style={s.safe}>
     <View style={s.browserHeader}>
      <Pressable style={s.browserBack} onPress={()=>setImageUrl("")}><Text style={s.browserBackText}>Back</Text></Pressable>
-     <Text style={s.browserTitle}>صور الدواء</Text>
+     <Text style={s.browserTitle}>Drug Images</Text>
     </View>
     {imageUrl?<WebView
       source={{uri:imageUrl}}
@@ -297,10 +296,10 @@ export default function App(){
 
 function productTypeLabel(v){
  const k=String(v||"").toUpperCase();
- return ({MEDICINE:"Medicine",COSMETIC:"Cosmetic",SUPPLEMENT:"Supplement",MEDICAL_DEVICE:"Medical Device",OTHER:"Other"}[k]||v||"غير محدد");
+ return ({MEDICINE:"Medicine",COSMETIC:"Cosmetic",SUPPLEMENT:"Supplement",MEDICAL_DEVICE:"Medical Device",OTHER:"Other"}[k]||v||"Unknown");
 }
 function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
-function DoseSection({title,text}){return <View style={s.doseSection}><Text style={s.doseSectionTitle}>{title}</Text><Text style={s.doseText}>{text||"غير متوفر في قاعدة البيانات الحالية."}</Text></View>}
+function DoseSection({title,text}){return <View style={s.doseSection}><Text style={s.doseSectionTitle}>{title}</Text><Text style={s.doseText}>{text||"Not available in the current reference database."}</Text></View>}
 function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
 
 const s=StyleSheet.create({
@@ -315,7 +314,7 @@ const s=StyleSheet.create({
  chipText:{color:"#43504D"},
  selText:{color:"#0B7468",fontWeight:"700"},
  list:{paddingBottom:90},
- card:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14,marginBottom:8,flexDirection:"row-reverse"},
+ card:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14,marginBottom:8,flexDirection:"row",direction:"ltr"},
  main:{flex:1,alignItems:"flex-start",direction:"ltr"},
  en:{fontSize:17,fontWeight:"700",color:"#172321"},
  ar:{marginTop:4,fontSize:15,color:"#0B7468"},
@@ -332,16 +331,16 @@ price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFont
  bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#FFF",borderTopWidth:1,borderTopColor:"#E1E7E5",padding:8,alignItems:"center"},
  call:{color:"#0B7468",fontWeight:"700"},
  back:{color:"#0B7468",fontWeight:"700",paddingVertical:12},
- detailScroll:{paddingBottom:110},
-headerRow:{minHeight:56,position:"relative",justifyContent:"center",alignItems:"center"},
+ detailScroll:{paddingBottom:110,direction:"ltr"},
+headerRow:{minHeight:56,position:"relative",justifyContent:"center",alignItems:"center",direction:"ltr"},
 title:{fontSize:22,fontWeight:"800",color:"#0B7468",textAlign:"center"},
 menuButton:{position:"absolute",right:0,top:4,width:46,height:46,borderRadius:10,backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",alignItems:"center",justifyContent:"center"},
 menuIcon:{fontSize:25,color:"#0B7468",fontWeight:"700",lineHeight:28},
 menuOverlay:{flex:1,backgroundColor:"rgba(0,0,0,0.18)"},
-menuPanel:{position:"absolute",top:58,right:16,width:230,backgroundColor:"#FFF",borderWidth:1,borderColor:"#DDE5E2",borderRadius:12,padding:12,shadowColor:"#000",shadowOpacity:0.12,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:5},
-menuTitle:{fontSize:18,fontWeight:"800",color:"#172321",textAlign:"right",paddingVertical:8,paddingHorizontal:6},
+menuPanel:{position:"absolute",top:58,right:16,direction:"ltr",width:230,backgroundColor:"#FFF",borderWidth:1,borderColor:"#DDE5E2",borderRadius:12,padding:12,shadowColor:"#000",shadowOpacity:0.12,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:5},
+menuTitle:{fontSize:18,fontWeight:"800",color:"#172321",textAlign:"left",paddingVertical:8,paddingHorizontal:6},
 menuItem:{borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:14,paddingHorizontal:8},
-menuItemText:{fontSize:16,fontWeight:"700",color:"#0B7468",textAlign:"right"},
+menuItemText:{fontSize:16,fontWeight:"700",color:"#0B7468",textAlign:"left"},
 toolPage:{flex:1,alignItems:"center",justifyContent:"center",padding:30,direction:"ltr",backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:12,marginTop:20},
 toolTitle:{fontSize:25,fontWeight:"800",color:"#0B7468",textAlign:"center"},
 toolHint:{fontSize:15,color:"#68736F",textAlign:"center",marginTop:12,lineHeight:22},
@@ -373,32 +372,32 @@ sourceLine:{marginTop:12,color:"#68736F",fontSize:12,textAlign:"left"},
 disclaimer:{marginTop:12,color:"#8A5A00",fontSize:11,textAlign:"left",lineHeight:18},
 resetButton:{marginTop:14,borderWidth:1,borderColor:"#0B7468",borderRadius:10,paddingVertical:11,alignItems:"center"},
 resetButtonText:{color:"#0B7468",fontWeight:"800"},
-browserHeader:{height:54,flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:14,backgroundColor:"#FFF",borderBottomWidth:1,borderBottomColor:"#E1E7E5"},
+browserHeader:{height:54,flexDirection:"row",alignItems:"center",justifyContent:"space-between",paddingHorizontal:14,backgroundColor:"#FFF",borderBottomWidth:1,borderBottomColor:"#E1E7E5"},
 browserTitle:{fontSize:17,fontWeight:"800",color:"#172321"},
 browserBack:{paddingVertical:8,paddingHorizontal:8},
 browserBackText:{color:"#0B7468",fontWeight:"700"},
 webview:{flex:1,backgroundColor:"#FFF"},
-detail:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
+detail:{direction:"ltr",backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
 detailLabel:{fontSize:12,fontWeight:"700",color:"#7A8582",textAlign:"right",marginBottom:4},
-eqSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
-eqTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right"},
-eqHint:{fontSize:12,color:"#7A8582",textAlign:"right",marginTop:3},
+eqSection:{direction:"ltr",marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
+eqTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"left"},
+eqHint:{fontSize:12,color:"#7A8582",textAlign:"left",marginTop:3},
 eqFilters:{flexDirection:"row-reverse",gap:8,marginTop:10,marginBottom:10},
 eqChip:{borderWidth:1,borderColor:"#CBD7D4",borderRadius:16,paddingHorizontal:12,paddingVertical:7,backgroundColor:"#FFF"},
 eqChipActive:{backgroundColor:"#DDEFEA",borderColor:"#0B7468"},
 eqChipText:{fontSize:12,color:"#43504D"},
 eqChipTextActive:{fontSize:12,color:"#0B7468",fontWeight:"700"},
 eqEmpty:{direction:"ltr",textAlign:"center",paddingVertical:18,color:"#7A8582"},
-eqCard:{backgroundColor:"#F8FAF9",borderWidth:1,borderColor:"#E0E7E5",borderRadius:8,padding:12,marginTop:8,flexDirection:"row-reverse",alignItems:"flex-start"},
-eqMain:{flex:1,minWidth:0,alignItems:"flex-end"},
-eqEn:{fontSize:15,fontWeight:"700",color:"#172321",textAlign:"right"},
+eqCard:{backgroundColor:"#F8FAF9",borderWidth:1,borderColor:"#E0E7E5",borderRadius:8,padding:12,marginTop:8,flexDirection:"row",direction:"ltr",alignItems:"flex-start"},
+eqMain:{flex:1,minWidth:0,alignItems:"flex-start",direction:"ltr"},
+eqEn:{fontSize:15,fontWeight:"700",color:"#172321",textAlign:"left"},
 eqAr:{fontSize:14,color:"#0B7468",marginTop:3,textAlign:"right"},
-eqCo:{fontSize:11,color:"#7A8582",marginTop:5,textAlign:"right"},
-eqPrice:{width:70,fontSize:13,fontWeight:"800",color:"#0B7468",textAlign:"left",marginRight:10},
+eqCo:{fontSize:11,color:"#7A8582",marginTop:5,textAlign:"left"},
+eqPrice:{width:70,fontSize:13,fontWeight:"800",color:"#0B7468",textAlign:"right",marginLeft:10},
 
- detailEn:{fontSize:24,fontWeight:"800",color:"#0B7468",textAlign:"right"},
+ detailEn:{fontSize:24,fontWeight:"800",color:"#0B7468",textAlign:"left"},
  detailAr:{fontSize:17,color:"#586460",marginTop:5,marginBottom:12,textAlign:"left"},
- info:{borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:12,flexDirection:"row-reverse"},
- label:{width:"36%",color:"#7A8582",textAlign:"right"},
- value:{width:"64%",color:"#172321",textAlign:"right"}
+ info:{direction:"ltr",borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:12,flexDirection:"row-reverse"},
+ label:{width:"36%",color:"#7A8582",textAlign:"left"},
+ value:{width:"64%",color:"#172321",textAlign:"left"}
 });
