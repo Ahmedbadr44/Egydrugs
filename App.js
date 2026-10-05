@@ -43,15 +43,15 @@ export default function App(){
 
  const searchResult=useDrugSearch(medicines,query,scope,{debounceMs:150,limit:200});
  const drugs=useMemo(()=>searchResult.hits.map(h=>h.item),[searchResult.hits]);
- const [sameForm,setSameForm]=useState(false);
+ const [sameRoute,setSameRoute]=useState(false);
  const [sameStrength,setSameStrength]=useState(false);
- const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameForm,sameStrength}):[],[medicines,selected,sameForm,sameStrength]);
+ const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameRoute,sameStrength}):[],[medicines,selected,sameForm,sameStrength]);
 
  const placeholder=scope==="ingredient"
    ?"اكتب المادة الفعالة بالإنجليزية"
    :"اكتب اسم البراند بالعربي أو الإنجليزي";
 
- const openDrug=item=>{setSameForm(false);setSameStrength(false);setSelected(item)};
+ const openDrug=item=>{setSameRoute(false);setSameStrength(false);setSelected(item)};
  const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.manufacturer].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
   <View style={s.main}>
@@ -136,9 +136,10 @@ export default function App(){
        <Text style={s.eqTitle}>المثائل ({equivalents.length})</Text>
        <Text style={s.eqHint}>أدوية لها نفس المادة الفعالة</Text>
        <View style={s.eqFilters}>
-        <Pressable style={[s.eqChip,sameForm&&s.eqChipActive]} onPress={()=>setSameForm(v=>!v)}>
-         <Text style={sameForm?s.eqChipTextActive:s.eqChipText}>نفس الشكل الدوائي</Text>
-        </Pressable>
+        {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
+         <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
+          <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>نفس الطريق</Text>
+         </Pressable>:null}
         {selected.nameEn&&hasStrength(selected.nameEn)?
          <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
           <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>نفس التركيز</Text>
