@@ -10,7 +10,7 @@ const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number
 const route=v=>({"ORAL.SOLID":"أقراص / كبسولات","ORAL.LIQUID":"شراب / سائل للشرب",INJECTION:"حقن",TOPICAL:"موضعي",EFF:"فوار",SPRAY:"بخاخ",EYE:"للعين",VAGINAL:"مهبلي",MOUTH:"للفم",RECTAL:"شرعي / لبوس",SOAP:"صابون",EAR:"للأذن"}[String(v||"").toUpperCase()]||v||"غير محدد");
 
 export default function App(){
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[detailLoading,setDetailLoading]=useState(false),[error,setError]=useState("");
 
  async function loadDrugs(){
   setLoading(true);setError("");
@@ -18,7 +18,7 @@ export default function App(){
    const rows=[];
    for(let from=0;;from+=PAGE_SIZE){
     const r=await supabase.from("drugs")
-      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,price_egp")
+      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,price_egp,product_type")
       .order("id",{ascending:true})
       .range(from,from+PAGE_SIZE-1);
     if(r.error)throw r.error;
@@ -33,7 +33,8 @@ export default function App(){
     ingredient:r.scientific_name||"",
     manufacturer:r.manufacturer||"",
     drugClass:r.drug_class||"",
-    route:r.route||""
+    route:r.route||"",
+    productType:r.product_type||""
    })));
   }catch(e){setError(e.message||"تعذر تحميل قاعدة البيانات");}
   finally{setLoading(false);}
@@ -51,7 +52,12 @@ export default function App(){
    ?"اكتب المادة الفعالة بالإنجليزية"
    :"اكتب اسم البراند بالعربي أو الإنجليزي";
 
- const openDrug=item=>{setSameRoute(false);setSameStrength(false);setSelected(item)};
+ const openDrug=async item=>{
+  setSameRoute(false);setSameStrength(false);setSelected({...item,medicalInfo:null});setDetailLoading(true);
+  const r=await supabase.from("drug_medical_info").select("uses").eq("drug_id",item.id).maybeSingle();
+  if(!r.error) setSelected(prev=>prev&&String(prev.id)===String(item.id)?{...prev,medicalInfo:r.data||null}:prev);
+  setDetailLoading(false);
+};
  const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.manufacturer].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
   <View style={s.main}>
@@ -126,11 +132,19 @@ export default function App(){
        <Info l="الشركة" v={selected.manufacturer}/>
        <Info l="التصنيف الدوائي" v={selected.drugClass}/>
        <Info l="الشكل الدوائي" v={route(selected.route)}/>
+       {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
        <Info l="السعر" v={price(selected.price)}/>
        <Pressable style={s.imageButton} onPress={openImageSearch}>
         <Text style={s.imageButtonText}>عرض صورة الدواء</Text>
        </Pressable>
       </View>
+      {detailLoading?
+       <View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل الاستخدامات...</Text></View>:
+       selected.medicalInfo?.uses?.length?
+       <View style={s.medicalSection}>
+        <Text style={s.medicalTitle}>الاستخدامات</Text>
+        {selected.medicalInfo.uses.map((x,i)=><Text key={i} style={s.medicalItem}>• {x}</Text>)}
+       </View>:null}
 
       <View style={s.eqSection}>
        <Text style={s.eqTitle}>المثائل ({equivalents.length})</Text>
@@ -184,6 +198,10 @@ export default function App(){
  </SafeAreaView>;
 }
 
+function productTypeLabel(v){
+ const k=String(v||"").toUpperCase();
+ return ({MEDICINE:"دواء",COSMETIC:"مستحضر تجميلي",SUPPLEMENT:"مكمل غذائي",MEDICAL_DEVICE:"مستلزم / جهاز طبي",OTHER:"أخرى"}[k]||v||"غير محدد");
+}
 function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
 function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
 
@@ -224,6 +242,10 @@ browserBack:{paddingVertical:8,paddingHorizontal:8},
 browserBackText:{color:"#0B7468",fontWeight:"700"},
 webview:{flex:1,backgroundColor:"#FFF"},
 detail:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
+medicalLoading:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:16,alignItems:"center"},
+medicalSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
+medicalTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right",marginBottom:8},
+medicalItem:{fontSize:14,color:"#172321",textAlign:"right",marginTop:6,lineHeight:21},
 detailLabel:{fontSize:12,fontWeight:"700",color:"#7A8582",textAlign:"right",marginBottom:4},
 eqSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
 eqTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right"},
