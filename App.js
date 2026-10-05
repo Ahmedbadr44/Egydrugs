@@ -11,7 +11,7 @@ const route=v=>({"ORAL.SOLID":"أقراص / كبسولات","ORAL.LIQUID":"شر�
 
 export default function App(){
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
- const[doseQuery,setDoseQuery]=useState(""),[doseSelected,setDoseSelected]=useState(null),[doseInfo,setDoseInfo]=useState(null),[doseAge,setDoseAge]=useState(""),[doseWeight,setDoseWeight]=useState(""),[doseLoading,setDoseLoading]=useState(false),[doseError,setDoseError]=useState("");
+ const[doseQuery,setDoseQuery]=useState(""),[doseSelected,setDoseSelected]=useState(null),[doseInfo,setDoseInfo]=useState(null),[doseLoading,setDoseLoading]=useState(false),[doseError,setDoseError]=useState("");
 
  async function loadDrugs(){
   setLoading(true);setError("");
@@ -79,28 +79,17 @@ export default function App(){
   if(!key){setDoseError("تعذر تحديد المادة الفعالة لهذا المنتج.");return;}
   if(String(item.productType||"").toUpperCase()==="COSMETIC"){setDoseError("هذا المنتج مستحضر تجميلي وليس له جرعة دوائية.");return;}
   setDoseLoading(true);
-  const r=await supabase.from("active_ingredient_medical_info").select("ingredient_key,display_name,dosage,source_name,source_url").eq("ingredient_key",key).maybeSingle();
+  const r=await supabase.from("dosage_reference")
+   .select("ingredient_key,display_name,adult_dose,pediatric_dose,pregnancy_safety,lactation_safety,side_effects,source_name,source_url")
+   .eq("ingredient_key",key)
+   .eq("is_combination",false)
+   .maybeSingle();
   if(r.error) setDoseError(r.error.message||"تعذر تحميل بيانات الجرعة.");
   else if(!r.data) setDoseError("لا توجد بيانات جرعة لهذه المادة الفعالة حاليًا.");
   else setDoseInfo(r.data);
   setDoseLoading(false);
  };
- const calculateWeightDose=(doseText,weight)=>{
-  const wt=Number(String(weight||"").replace(",",".")); 
-  if(!doseText||!Number.isFinite(wt)||wt<=0)return null;
-  const range=String(doseText).match(/(\d+(?:[.,]\d+)?)\s*[–-]\s*(\d+(?:[.,]\d+)?)\s*(mg|mcg|g)\s*\/\s*kg/i);
-  const single=String(doseText).match(/(\d+(?:[.,]\d+)?)\s*(mg|mcg|g)\s*\/\s*kg/i);
-  const m=range||single;if(!m)return null;
-  let min=Number(String(m[1]).replace(",",".")),max=range?Number(String(m[2]).replace(",",".")):null;
-  const unit=(range?m[3]:m[2]).toLowerCase();
-  const factor=unit==="mcg"?0.001:unit==="g"?1000:1;
-  min*=factor;if(max!==null)max*=factor;
-  const daily=/\/\s*(?:day|d|يوم)/i.test(String(doseText));
-  const suffix=daily?"mg/day":"mg per dose";
-  const fmt=n=>String(Number(n.toFixed(2)));
-  return max===null?fmt(min*wt)+" "+suffix:fmt(min*wt)+"–"+fmt(max*wt)+" "+suffix;
- };
- const resetDose=()=>{setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseAge("");setDoseWeight("");setDoseError("");};
+ const resetDose=()=>{setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");};
  return <SafeAreaView style={s.safe}>
   <StatusBar barStyle="dark-content"/>
   <View style={s.container}>
@@ -231,7 +220,7 @@ export default function App(){
       <ScrollView contentContainerStyle={s.toolScroll}>
        <View style={s.toolPage}>
         <Text style={s.toolTitle}>حساب الجرعات</Text>
-        <Text style={s.toolHint}>ابحث باسم الدواء، ثم أدخل العمر والوزن لحساب الجرعة حسب المادة الفعالة عند توفر جرعة mg/kg.</Text>
+        <Text style={s.toolHint}>ابحث عن الدواء، ثم راجع جرعة مادته الفعالة والمعلومات المرجعية المتاحة.</Text>
         <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder="ابحث عن اسم الدواء" placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
         {doseQuery.trim().length>1&&!doseSelected ? (
          <View style={s.doseResults}>
@@ -250,31 +239,17 @@ export default function App(){
            {doseSelected.nameAr?<Text style={s.doseSelectedAr}>{doseSelected.nameAr}</Text>:null}
            <Text style={s.doseSelectedIng}>المادة الفعالة: {doseSelected.ingredient||"-"}</Text>
           </View>
-          <Text style={s.doseLabel}>العمر بالسنوات</Text>
-          <TextInput value={doseAge} onChangeText={setDoseAge} keyboardType="numeric" placeholder="مثال: 30" placeholderTextColor="#7B8784" style={s.toolInput}/>
-          <Text style={s.doseLabel}>الوزن بالكيلو</Text>
-          <TextInput value={doseWeight} onChangeText={setDoseWeight} keyboardType="decimal-pad" placeholder="مثال: 20" placeholderTextColor="#7B8784" style={s.toolInput}/>
-          {doseLoading?<View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل جرعة المادة الفعالة...</Text></View>:null}
+          {doseLoading?<View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل بيانات المادة الفعالة...</Text></View>:null}
           {doseError?<Text style={s.doseError}>{doseError}</Text>:null}
           {doseInfo&&!doseError ? (
            <View>
-            {String(doseAge).trim()==="" ? <Text style={s.doseHint}>أدخل العمر لعرض جرعة البالغين أو الأطفال.</Text> : Number(doseAge)>=18 ? (
-             <View style={s.doseSection}>
-              <Text style={s.doseSectionTitle}>جرعة البالغين</Text>
-              {(Array.isArray(doseInfo.dosage)?doseInfo.dosage:[]).map((x,i)=><Text key={"adult-"+i} style={s.doseText}>• {x}</Text>)}
-             </View>
-            ) : (
-             <View style={s.doseSection}>
-              <Text style={s.doseSectionTitle}>جرعة الأطفال</Text>
-              {(Array.isArray(doseInfo.dosage)?doseInfo.dosage:[]).map((x,i)=><Text key={"ped-"+i} style={s.doseText}>• {x}</Text>)}
-              {doseWeight&&Array.isArray(doseInfo.dosage)&&doseInfo.dosage.length ? <View style={s.calculatedBox}>
-               <Text style={s.calculatedTitle}>الجرعة المحسوبة حسب الوزن</Text>
-               <Text style={s.calculatedText}>{calculateWeightDose(doseInfo.dosage.join(" "),doseWeight)||"صيغة الجرعة الحالية لا تحتوي على معادلة mg/kg قابلة للحساب تلقائيًا."}</Text>
-              </View>:null}
-             </View>
-            )}
+            <DoseSection title="جرعة البالغين (Adult Dose)" text={doseInfo.adult_dose}/>
+            <DoseSection title="جرعة الأطفال (Pediatric Dose)" text={doseInfo.pediatric_dose}/>
+            <DoseSection title="أمان الاستخدام في الحمل (Pregnancy Safety)" text={doseInfo.pregnancy_safety}/>
+            <DoseSection title="أمان الاستخدام في الرضاعة (Lactation Safety)" text={doseInfo.lactation_safety}/>
+            <DoseSection title="أبرز الأعراض الجانبية (Common & Important Side Effects)" text={doseInfo.side_effects}/>
             {(doseInfo.source_name||doseInfo.source_url)?<Text style={s.sourceLine}>المصدر: {doseInfo.source_name||doseInfo.source_url}</Text>:null}
-            <Text style={s.disclaimer}>هذه أداة مرجعية تعليمية، وليست وصفة طبية. الجرعة النهائية تعتمد على التشخيص وعمر المريض وحالته وطريقة الاستخدام والنشرة المعتمدة.</Text>
+            <Text style={s.disclaimer}>هذه المعلومات مرجعية وليست بديلًا عن التقييم السريري أو النشرة المعتمدة.</Text>
            </View>
           ):null}
           <Pressable style={s.resetButton} onPress={resetDose}><Text style={s.resetButtonText}>اختيار دواء آخر</Text></Pressable>
@@ -316,6 +291,7 @@ function productTypeLabel(v){
  return ({MEDICINE:"دواء",COSMETIC:"مستحضر تجميلي",SUPPLEMENT:"مكمل غذائي",MEDICAL_DEVICE:"مستلزم / جهاز طبي",OTHER:"أخرى"}[k]||v||"غير محدد");
 }
 function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
+function DoseSection({title,text}){return <View style={s.doseSection}><Text style={s.doseSectionTitle}>{title}</Text><Text style={s.doseText}>{text||"غير متوفر في قاعدة البيانات الحالية."}</Text></View>}
 function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
 
 const s=StyleSheet.create({
