@@ -43,8 +43,8 @@ export default function App(){
 
  const searchResult=useDrugSearch(medicines,query,scope,{debounceMs:150,limit:200});
  const drugs=useMemo(()=>searchResult.hits.map(h=>h.item),[searchResult.hits]);
- const [sameRoute,setSameRoute]=useState(true);
- const [sameStrength,setSameStrength]=useState(true);
+ const [sameForm,setSameForm]=useState(false);
+ const [sameStrength,setSameStrength]=useState(false);
  const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameForm,sameStrength}):[],[medicines,selected,sameForm,sameStrength]);
 
  const placeholder=scope==="ingredient"
