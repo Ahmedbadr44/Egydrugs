@@ -11,5 +11,6 @@ data class Drug(
     val route: String,
     val price: Double?,
     val dosage: String = "",
+    val productType: String? = null,
     val remoteId: Long? = null
 )
