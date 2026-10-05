@@ -138,11 +138,11 @@ export default function App(){
        <View style={s.eqFilters}>
         {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
          <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
-          <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>نفس الطريق</Text>
+          <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>Same Route</Text>
          </Pressable>:null}
         {selected.nameEn&&hasStrength(selected.nameEn)?
          <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
-          <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>نفس التركيز</Text>
+          <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>Same Concentration</Text>
          </Pressable>:null}
        </View>
 
