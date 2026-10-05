@@ -55,34 +55,67 @@ export function strengthOf(nameEn=""){
  return out.sort();
 }
 
-function knownRoute(route=""){
- return String(route).trim()!=="" && String(route).toUpperCase()!=="UNKNOWN";
+// Best-effort dosage-form normalization from the commercial name.
+// The database currently has no separate dosage_form column, so this is kept
+// local and conservative. Unknown forms are left as "unknown".
+export function dosageFormOf(name=""){
+ const u=String(name||"").toUpperCase();
+ const rules=[
+  [/\b(TABLETS?|TABS?|TAB)\b/,"tablet"],
+  [/\b(CAPSULES?|CAPS?|CAP)\b/,"capsule"],
+  [/\b(ORAL\s+SUSPENSION|SUSPENSION|SUSP)\b/,"suspension"],
+  [/\b(SYRUP|SOLUTION|LIQUID|DROPS?)\b/,"liquid"],
+  [/\b(EFF(?:ERVESCENT)?|EFF(?:ERVESCENT)?\s+TABLETS?)\b/,"effervescent"],
+  [/\b(AMP(?:OULE)?S?|AMP)\b/,"ampoule"],
+  [/\b(VIALS?|VIAL)\b/,"vial"],
+  [/\b(INJECTION|INJ)\b/,"injection"],
+  [/\b(CREAM)\b/,"cream"],
+  [/\b(OINTMENT|OINT)\b/,"ointment"],
+  [/\b(GEL)\b/,"gel"],
+  [/\b(LOTION)\b/,"lotion"],
+  [/\b(SPRAY)\b/,"spray"],
+  [/\b(PATCH)\b/,"patch"],
+  [/\b(SUPPOSITORIES?|SUPP)\b/,"suppository"],
+  [/\b(PESSAR(?:Y|IES)?)\b/,"pessary"],
+  [/\b(POWDER|SACHETS?)\b/,"powder"],
+  [/\b(SOAP)\b/,"soap"],
+  [/\b(STRIP|STRIPS)\b/,"strip"],
+  [/\b(LOZENGES?|PASTILLES?)\b/,"lozenge"],
+  [/\b(EYE\s+GEL)\b/,"eye-gel"],
+  [/\b(EYE\s+DROPS?)\b/,"eye-drops"],
+  [/\b(EAR\s+DROPS?)\b/,"ear-drops"],
+  [/\b(NASAL\s+SPRAY)\b/,"nasal-spray"]
+ ];
+ for(const [re,val] of rules) if(re.test(u)) return val;
+ return "unknown";
 }
 
-function priceValue(v){
- const n=Number(v);
- return Number.isFinite(n)?n:-Infinity;
-}
-
-export function getEquivalents(rows,selected,{sameRoute=true,sameStrength=true}={}){
+export function getEquivalents(rows,selected,{sameForm=false,sameStrength=false}={}){
  const selectedIng=ingredientKey(selected?.scientific_name||selected?.ingredient||"");
  if(!selectedIng) return [];
  const selectedStrength=strengthOf(selected?.commercial_name_en||selected?.nameEn||"");
- const selectedHasRoute=knownRoute(selected?.route);
+ const selectedForm=dosageFormOf(selected?.commercial_name_en||selected?.nameEn||"");
  return rows
   .filter(row=>{
    if(String(row.id)===String(selected.id)) return false;
    const ing=ingredientKey(row.scientific_name||row.ingredient||"");
    if(!ing||ing!==selectedIng) return false;
-   if(sameRoute&&selectedHasRoute && String(row.route||"").toUpperCase()!==String(selected.route||"").toUpperCase()) return false;
-   const otherStrength=strengthOf(row.commercial_name_en||row.nameEn||"");
-   if(sameStrength&&selectedStrength.length && JSON.stringify(otherStrength)!==JSON.stringify(selectedStrength)) return false;
+   if(sameForm){
+    const otherForm=dosageFormOf(row.commercial_name_en||row.nameEn||"");
+    if(!selectedForm||!otherForm||selectedForm!==otherForm) return false;
+   }
+   if(sameStrength&&selectedStrength.length){
+    const otherStrength=strengthOf(row.commercial_name_en||row.nameEn||"");
+    if(JSON.stringify(otherStrength)!==JSON.stringify(selectedStrength)) return false;
+   }
    return true;
   })
   .sort((a,b)=>{
-   const pa=priceValue(a.price??a.price_egp),pb=priceValue(b.price??b.price_egp);
+   const pa=a.price==null?null:Number(a.price),pb=b.price==null?null:Number(b.price);
+   if(pa==null&&pb==null) return String(a.nameEn||a.commercial_name_en||"").localeCompare(String(b.nameEn||b.commercial_name_en||""));
+   if(pa==null) return 1;
+   if(pb==null) return -1;
    if(pa!==pb) return pb-pa;
-   const na=a.commercial_name_en||a.nameEn||"",nb=b.commercial_name_en||b.nameEn||"";
-   return na.localeCompare(nb);
+   return String(a.nameEn||a.commercial_name_en||"").localeCompare(String(b.nameEn||b.commercial_name_en||""));
   });
 }
