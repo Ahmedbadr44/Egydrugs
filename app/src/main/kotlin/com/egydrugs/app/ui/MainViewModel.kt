@@ -27,7 +27,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     // Forces one remote refresh after an app update, even if an older local cache
     // accidentally stored the same database version. After that, normal version checks apply.
-    private val syncProtocolVersion = 2
+    private val syncProtocolVersion = 3
 
     data class SearchUi(
         val loading: Boolean = true,
