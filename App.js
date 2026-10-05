@@ -347,7 +347,7 @@ toolHint:{fontSize:15,color:"#68736F",textAlign:"center",marginTop:12,lineHeight
 imageButton:{marginTop:16,backgroundColor:"#0B7468",borderRadius:10,paddingVertical:12,paddingHorizontal:16,alignItems:"center"},
 imageButtonText:{color:"#FFF",fontSize:15,fontWeight:"800"},
 toolScroll:{paddingBottom:100,direction:"ltr"},
-toolSearch:{direction:"ltr",width:"100%",backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:13,fontSize:16,marginTop:16,textAlign:"right"},
+toolSearch:{direction:"ltr",width:"100%",backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:13,fontSize:16,marginTop:16,textAlign:"left"},
 doseResults:{direction:"ltr",width:"100%",marginTop:10},
 doseResult:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:9,padding:12,marginBottom:7},
 doseResultEn:{fontSize:15,fontWeight:"700",color:"#172321",textAlign:"left"},
