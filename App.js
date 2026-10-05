@@ -2,6 +2,7 @@ import React,{useEffect,useMemo,useState} from "react";
 import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
 import{supabase}from"./src/lib/supabase";
 import{useDrugSearch}from"./src/search/useDrugSearch";
+import{getEquivalents}from"./src/equivalents";
 I18nManager.allowRTL(true);
 const PAGE_SIZE=1000,PHONE="01030950177";
 const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" ج.م";
@@ -41,6 +42,9 @@ export default function App(){
 
  const searchResult=useDrugSearch(medicines,query,scope,{debounceMs:150,limit:200});
  const drugs=useMemo(()=>searchResult.hits.map(h=>h.item),[searchResult.hits]);
+ const [sameRoute,setSameRoute]=useState(true);
+ const [sameStrength,setSameStrength]=useState(true);
+ const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameRoute,sameStrength}):[],[medicines,selected,sameRoute,sameStrength]);
 
  const placeholder=scope==="ingredient"
    ?"اكتب المادة الفعالة بالإنجليزية"
@@ -62,7 +66,7 @@ export default function App(){
  return <SafeAreaView style={s.safe}>
   <StatusBar barStyle="dark-content"/>
   <View style={s.container}>
-   <Text style={s.title}>دليل الأدوية المصرية</Text>
+   <Text style={s.title}>EgyMeds</Text>
    <TextInput
     value={query}
     onChangeText={setQuery}
