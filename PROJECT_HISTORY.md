@@ -461,3 +461,9 @@ Before changing anything:
 - Scientific Data opens an internal view containing Uses, Dosage, Side Effects, Contraindications, and Source when available.
 - Back from Scientific Data returns to the same drug detail card and its equivalents.
 - Medical Uses are used for MEDICINE products and Cosmetic Uses for COSMETIC products.
+
+## 26. 2026-10-06 — Combination scientific-data behavior
+- Mobile Scientific Data now reads from `public.drug_medical_effective` for every product.
+- Single-ingredient products receive active-ingredient Medical Uses/Cosmetic Uses according to `product_type`.
+- Multi-ingredient products receive only product-specific Scientific Data from `drug_medical_info`; component-level Paracetamol or other ingredient data is not automatically merged into the combination.
+- The Scientific Data screen contains Uses, Dosage, Side Effects, Contraindications, and Source when available.
