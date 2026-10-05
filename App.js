@@ -229,7 +229,7 @@ export default function App(){
         </View>
        </>
       )}
-     </ScrollView>}iew>}
+     </ScrollView>}
     </View>
    </SafeAreaView>
   </Modal>
