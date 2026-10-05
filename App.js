@@ -117,7 +117,8 @@ export default function App(){
      <Pressable onPress={()=>setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
       <View style={s.detail}>
-       <Text style={s.detailEn}>{selected.nameEn}</Text>
+       <Text style={s.detailLabel}>اسم الدواء</Text>
+       <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
        <Text style={s.detailAr}>{selected.nameAr||"-"}</Text>
        <Info l="المادة الفعالة" v={selected.ingredient}/>
        <Info l="الشركة" v={selected.manufacturer}/>
@@ -135,7 +136,7 @@ export default function App(){
           <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>نفس الطريق</Text>
          </Pressable>:null}
         {selected.nameEn&&
-         getStrengthSafe(selected.nameEn).length?
+         hasStrength(selected.nameEn)?
          <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
           <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>نفس التركيز</Text>
          </Pressable>:null}
@@ -162,7 +163,7 @@ export default function App(){
  </SafeAreaView>;
 }
 
-function getStrengthSafe(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""))?[1]:[]}
+function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
 function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
 
 const s=StyleSheet.create({
@@ -195,6 +196,7 @@ price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFont
  back:{color:"#0B7468",fontWeight:"700",paddingVertical:12},
  detailScroll:{paddingBottom:110},
 detail:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
+detailLabel:{fontSize:12,fontWeight:"700",color:"#7A8582",textAlign:"right",marginBottom:4},
 eqSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
 eqTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right"},
 eqHint:{fontSize:12,color:"#7A8582",textAlign:"right",marginTop:3},
