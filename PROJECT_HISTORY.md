@@ -473,3 +473,8 @@ Before changing anything:
 - Supabase now contains the first 100 supplied compound/active-ingredient records in the scientific-data layer: 90 single entries and 10 normalized combinations.
 - The mobile app's Scientific Data screen already reads the unified `drug_medical_effective` view, so single-ingredient records and combination records are served through the same API surface.
 - No per-commercial-product duplication was introduced for the imported combination dataset; products sharing a normalized combination key can use the same combination Scientific Data.
+
+## 28. 2026-10-06 — Scientific data switched to Medscape dataset
+- The mobile app continues to use `public.drug_medical_effective` as its single Scientific Data source.
+- The database backing that view has been replaced with the user-provided Medscape Reference Drug Monographs values for the Top 100 dataset.
+- Single-ingredient and combination routing remains unchanged, so the new wording/data will flow to Scientific Data without another UI change.
