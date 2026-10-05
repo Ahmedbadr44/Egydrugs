@@ -487,3 +487,15 @@ Before changing anything:
 - Added menu entries for: حساب الجرعات, دليل الأدوية, and تحديث الأسعار.
 - Each menu entry currently opens its own internal screen placeholder so the navigation structure is ready for the next feature implementation.
 - Preserved the existing search, drug details, equivalents, pricing display, and image-search behavior.
+
+
+## 30. 2026-10-06 — Dosage Calculator v1 + Cosmetics Guide menu
+- Added the first version of the mobile **حساب الجرعات** section.
+- The user searches for a commercial drug by brand name; combination products are excluded from the first version.
+- After selecting a single-ingredient product, the app resolves the normalized active ingredient using the existing `ingredientKey()` logic and loads dosage data from `public.active_ingredient_medical_info`.
+- The calculator asks for age and weight. For adults it shows the stored Adult dosage reference; for children it shows the stored Pediatric dosage reference and calculates a weight-based dose when the stored text contains a parseable mg/kg expression.
+- The current dosage source is the existing active-ingredient dosage data; products without a matching dosage record are reported as unavailable rather than guessed.
+- Added **دليل مستحضرات التجميل** to the home three-line menu.
+- The cosmetic guide, drug guide, and price-update sections remain separate screens for their next implementation phases.
+- This version is intentionally limited to single-ingredient products; combination-dose logic will be added later.
+- The uploaded 200-entry dosage reference contains Adult Dose, Pediatric Dose, Pregnancy Safety, Lactation Safety, and Side Effects fields. The app currently uses the dosage portion for the calculator. fileciteturn170file0L3-L13
