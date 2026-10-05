@@ -478,3 +478,12 @@ Before changing anything:
 - The mobile app continues to use `public.drug_medical_effective` as its single Scientific Data source.
 - The database backing that view has been replaced with the user-provided Medscape Reference Drug Monographs values for the Top 100 dataset.
 - Single-ingredient and combination routing remains unchanged, so the new wording/data will flow to Scientific Data without another UI change.
+
+
+## 29. 2026-10-06 — Simplified mobile navigation
+- Removed the Scientific Data button and Scientific Data screen from the commercial drug detail card in the React Native app.
+- Kept the existing database Scientific Data architecture untouched for future use; no Scientific Data records were deleted.
+- Added a three-line menu (☰) to the home screen.
+- Added menu entries for: حساب الجرعات, دليل الأدوية, and تحديث الأسعار.
+- Each menu entry currently opens its own internal screen placeholder so the navigation structure is ready for the next feature implementation.
+- Preserved the existing search, drug details, equivalents, pricing display, and image-search behavior.
