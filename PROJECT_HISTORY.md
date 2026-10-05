@@ -526,3 +526,9 @@ Before changing anything:
 - Added the same **البراند / المادة الفعالة** search modes inside the dosage calculator.
 - Combination products are no longer hidden from search results. When selected, the app now looks up the dosage reference using the appropriate combination flag, so supported combination references can appear instead of being silently filtered out.
 - This fixes the previous issue where products such as **AUGMENTIN** were excluded before selection because their active ingredient is a combination.
+
+
+## 34. 2026-10-06 — Fixed Augmentin dosage-reference key
+- The Augmentin dosage reference was present in `public.dosage_reference`, but its combination key was `AMOXICILLIN+CLAVULANATE` while the app and the existing combination-data layer normalize the product as `AMOXICILLIN+CLAVULANIC ACID`.
+- Updated the single combination dosage-reference key to `AMOXICILLIN+CLAVULANIC ACID` so Augmentin products can resolve their dosage record after selection.
+- Verified `dosage_reference` still contains 200 records and exactly 1 combination record, with the Augmentin combination reference now resolvable.
