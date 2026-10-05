@@ -1,5 +1,6 @@
 import React,{useEffect,useMemo,useState} from "react";
 import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
+import{WebView}from"react-native-webview";
 import{supabase}from"./src/lib/supabase";
 import{useDrugSearch}from"./src/search/useDrugSearch";
 import{getEquivalents}from"./src/equivalents";
@@ -9,7 +10,7 @@ const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number
 const route=v=>({"ORAL.SOLID":"أقراص / كبسولات","ORAL.LIQUID":"شراب / سائل للشرب",INJECTION:"حقن",TOPICAL:"موضعي",EFF:"فوار",SPRAY:"بخاخ",EYE:"للعين",VAGINAL:"مهبلي",MOUTH:"للفم",RECTAL:"شرعي / لبوس",SOAP:"صابون",EAR:"للأذن"}[String(v||"").toUpperCase()]||v||"غير محدد");
 
 export default function App(){
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState("");
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
 
  async function loadDrugs(){
   setLoading(true);setError("");
@@ -51,6 +52,7 @@ export default function App(){
    :"اكتب اسم البراند بالعربي أو الإنجليزي";
 
  const openDrug=item=>{setSameRoute(true);setSameStrength(true);setSelected(item)};
+ const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.manufacturer].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
   <View style={s.main}>
    <Text style={s.en} numberOfLines={3}>{item.nameEn||"-"}</Text>
@@ -125,6 +127,9 @@ export default function App(){
        <Info l="التصنيف الدوائي" v={selected.drugClass}/>
        <Info l="الشكل الدوائي" v={route(selected.route)}/>
        <Info l="السعر" v={price(selected.price)}/>
+       <Pressable style={s.imageButton} onPress={openImageSearch}>
+        <Text style={s.imageButtonText}>عرض صورة الدواء</Text>
+       </Pressable>
       </View>
 
       <View style={s.eqSection}>
@@ -158,6 +163,23 @@ export default function App(){
       </View>
      </ScrollView>}
     </View>
+   </SafeAreaView>
+  </Modal>
+
+  <Modal visible={!!imageUrl} animationType="slide" onRequestClose={()=>setImageUrl("")}>
+   <SafeAreaView style={s.safe}>
+    <View style={s.browserHeader}>
+     <Pressable style={s.browserBack} onPress={()=>setImageUrl("")}><Text style={s.browserBackText}>رجوع</Text></Pressable>
+     <Text style={s.browserTitle}>صور الدواء</Text>
+    </View>
+    {imageUrl?<WebView
+      source={{uri:imageUrl}}
+      style={s.webview}
+      startInLoadingState
+      javaScriptEnabled
+      domStorageEnabled
+      setSupportMultipleWindows={false}
+    />:null}
    </SafeAreaView>
   </Modal>
  </SafeAreaView>;
@@ -195,6 +217,13 @@ price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFont
  call:{color:"#0B7468",fontWeight:"700"},
  back:{color:"#0B7468",fontWeight:"700",paddingVertical:12},
  detailScroll:{paddingBottom:110},
+imageButton:{marginTop:16,backgroundColor:"#0B7468",borderRadius:10,paddingVertical:12,paddingHorizontal:16,alignItems:"center"},
+imageButtonText:{color:"#FFF",fontSize:15,fontWeight:"800"},
+browserHeader:{height:54,flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:14,backgroundColor:"#FFF",borderBottomWidth:1,borderBottomColor:"#E1E7E5"},
+browserTitle:{fontSize:17,fontWeight:"800",color:"#172321"},
+browserBack:{paddingVertical:8,paddingHorizontal:8},
+browserBackText:{color:"#0B7468",fontWeight:"700"},
+webview:{flex:1,backgroundColor:"#FFF"},
 detail:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
 detailLabel:{fontSize:12,fontWeight:"700",color:"#7A8582",textAlign:"right",marginBottom:4},
 eqSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
