@@ -467,3 +467,9 @@ Before changing anything:
 - Single-ingredient products receive active-ingredient Medical Uses/Cosmetic Uses according to `product_type`.
 - Multi-ingredient products receive only product-specific Scientific Data from `drug_medical_info`; component-level Paracetamol or other ingredient data is not automatically merged into the combination.
 - The Scientific Data screen contains Uses, Dosage, Side Effects, Contraindications, and Source when available.
+
+
+## 27. 2026-10-06 — Top 100 scientific dataset available
+- Supabase now contains the first 100 supplied compound/active-ingredient records in the scientific-data layer: 90 single entries and 10 normalized combinations.
+- The mobile app's Scientific Data screen already reads the unified `drug_medical_effective` view, so single-ingredient records and combination records are served through the same API surface.
+- No per-commercial-product duplication was introduced for the imported combination dataset; products sharing a normalized combination key can use the same combination Scientific Data.
