@@ -54,21 +54,20 @@ export default function App(){
 
  const openDrug=async item=>{
   setSameRoute(false);setSameStrength(false);setScientificOpen(false);setSelected({...item,medicalInfo:null});setDetailLoading(true);
-  const type=String(item.productType||"").toUpperCase();
+  const r=await supabase.from("drug_medical_effective")
+    .select("drug_id,uses,dosage,side_effects,contraindications,source_url,source_name")
+    .eq("drug_id",item.id)
+    .maybeSingle();
   let info={uses:[],dosage:[],sideEffects:[],contraindications:[],sourceName:"",sourceUrl:""};
-  const keys=[...new Set(String(item.ingredient||"").split(/[+;,/]+/).map(x=>ingredientKey(x)).filter(Boolean))];
-  if(keys.length){
-   const r=await supabase.from("active_ingredient_medical_info").select("ingredient_key,medical_uses,cosmetic_uses,dosage,side_effects,contraindications,source_name,source_url").in("ingredient_key",keys);
-   if(!r.error){
-    const field=type==="MEDICINE"?"medical_uses":type==="COSMETIC"?"cosmetic_uses":null;
-    info.uses=field?[...new Set((r.data||[]).flatMap(x=>Array.isArray(x[field])?x[field]:[]))]:[];
-    info.dosage=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.dosage)?x.dosage:[]))];
-    info.sideEffects=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.side_effects)?x.side_effects:[]))];
-    info.contraindications=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.contraindications)?x.contraindications:[]))];
-    const source=(r.data||[]).find(x=>x.source_name||x.source_url);
-    info.sourceName=source?.source_name||"";
-    info.sourceUrl=source?.source_url||"";
-   }
+  if(!r.error&&r.data){
+    info={
+      uses:Array.isArray(r.data.uses)?r.data.uses:[],
+      dosage:Array.isArray(r.data.dosage)?r.data.dosage:[],
+      sideEffects:Array.isArray(r.data.side_effects)?r.data.side_effects:[],
+      contraindications:Array.isArray(r.data.contraindications)?r.data.contraindications:[],
+      sourceName:r.data.source_name||"",
+      sourceUrl:r.data.source_url||""
+    };
   }
   setSelected(prev=>prev&&String(prev.id)===String(item.id)?{...prev,medicalInfo:info}:prev);
   setDetailLoading(false);
