@@ -498,4 +498,4 @@ Before changing anything:
 - Added **دليل مستحضرات التجميل** to the home three-line menu.
 - The cosmetic guide, drug guide, and price-update sections remain separate screens for their next implementation phases.
 - This version is intentionally limited to single-ingredient products; combination-dose logic will be added later.
-- The uploaded 200-entry dosage reference contains Adult Dose, Pediatric Dose, Pregnancy Safety, Lactation Safety, and Side Effects fields. The app currently uses the dosage portion for the calculator. fileciteturn170file0L3-L13
+- The uploaded 200-entry dosage reference contains Adult Dose, Pediatric Dose, Pregnancy Safety, Lactation Safety, and Side Effects fields. The app currently uses the dosage portion for the calculator.
