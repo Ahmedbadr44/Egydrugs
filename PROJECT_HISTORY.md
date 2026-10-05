@@ -455,3 +455,9 @@ Before changing anything:
 - The content is still supplied by `public.drug_medical_effective`; the app does not duplicate active-ingredient use data locally.
 - Increased cache version from 3 to 4 and sync protocol from 2 to 3 so existing installations fetch the new `product_type` field.
 - Paracetamol's current centralized Medical Uses will therefore appear on medicine products after sync.
+## 25. 2026-10-06 — Scientific Data inside drug card
+- Moved scientific information access into the main React Native drug card.
+- The card now contains a Scientific Data button instead of rendering Uses as a separate card underneath.
+- Scientific Data opens an internal view containing Uses, Dosage, Side Effects, Contraindications, and Source when available.
+- Back from Scientific Data returns to the same drug detail card and its equivalents.
+- Medical Uses are used for MEDICINE products and Cosmetic Uses for COSMETIC products.
