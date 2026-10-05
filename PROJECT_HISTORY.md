@@ -532,3 +532,13 @@ Before changing anything:
 - The Augmentin dosage reference was present in `public.dosage_reference`, but its combination key was `AMOXICILLIN+CLAVULANATE` while the app and the existing combination-data layer normalize the product as `AMOXICILLIN+CLAVULANIC ACID`.
 - Updated the single combination dosage-reference key to `AMOXICILLIN+CLAVULANIC ACID` so Augmentin products can resolve their dosage record after selection.
 - Verified `dosage_reference` still contains 200 records and exactly 1 combination record, with the Augmentin combination reference now resolvable.
+
+
+## 35. 2026-10-06 — Replaced dosage reference with user-provided English dataset
+- Replaced the previous mixed Arabic/English dosage-reference content in `public.dosage_reference` with the newly uploaded English 200-entry dataset.
+- Imported all 200 numbered entries exactly from the supplied source structure: Adult Dose & Interval, Pediatric Dose & Interval, Pregnancy Safety, Lactation Safety, and Common Side Effects.
+- Preserved the existing normalized keys, including `AMOXICILLIN+CLAVULANIC ACID` for the single combination record and `SODIUM VALPROATE` for the valproate entry.
+- Verified the table still contains 200 records: 199 single-ingredient records and 1 combination record; Adult and Pediatric Dose fields are filled for all 200 rows.
+- Verified the clinical dosage fields contain no Arabic characters after import.
+- Created `public.dosage_reference_before_english_20261006` as a pre-import backup.
+- No automatic Arabic-to-English translation was used; the supplied English wording is now the source text for the dosage reference.
