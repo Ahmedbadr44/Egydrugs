@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useState} from "react";
-import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
+import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
 import{supabase}from"./src/lib/supabase";
 import{useDrugSearch}from"./src/search/useDrugSearch";
 I18nManager.allowRTL(true);
@@ -46,7 +46,8 @@ export default function App(){
    ?"اكتب المادة الفعالة بالإنجليزية"
    :"اكتب اسم البراند بالعربي أو الإنجليزي";
 
- const card=({item})=><Pressable style={s.card} onPress={()=>setSelected(item)}>
+ const openDrug=item=>{setSameRoute(true);setSameStrength(true);setSelected(item)};
+ const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
   <View style={s.main}>
    <Text style={s.en} numberOfLines={3}>{item.nameEn||"-"}</Text>
    {item.nameAr?<Text style={s.ar} numberOfLines={2}>{item.nameAr}</Text>:null}
@@ -110,21 +111,54 @@ export default function App(){
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
      <Pressable onPress={()=>setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
-     {selected&&<View style={s.detail}>
-      <Text style={s.detailEn}>{selected.nameEn}</Text>
-      <Text style={s.detailAr}>{selected.nameAr||"-"}</Text>
-      <Info l="المادة الفعالة" v={selected.ingredient}/>
-      <Info l="الشركة" v={selected.manufacturer}/>
-      <Info l="التصنيف الدوائي" v={selected.drugClass}/>
-      <Info l="الشكل الدوائي" v={route(selected.route)}/>
-      <Info l="السعر" v={price(selected.price)}/>
-     </View>}
+     {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
+      <View style={s.detail}>
+       <Text style={s.detailEn}>{selected.nameEn}</Text>
+       <Text style={s.detailAr}>{selected.nameAr||"-"}</Text>
+       <Info l="المادة الفعالة" v={selected.ingredient}/>
+       <Info l="الشركة" v={selected.manufacturer}/>
+       <Info l="التصنيف الدوائي" v={selected.drugClass}/>
+       <Info l="الشكل الدوائي" v={route(selected.route)}/>
+       <Info l="السعر" v={price(selected.price)}/>
+      </View>
+
+      <View style={s.eqSection}>
+       <Text style={s.eqTitle}>المثائل ({equivalents.length})</Text>
+       <Text style={s.eqHint}>أدوية لها نفس المادة الفعالة</Text>
+       <View style={s.eqFilters}>
+        {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
+         <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
+          <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>نفس الطريق</Text>
+         </Pressable>:null}
+        {selected.nameEn&&
+         getStrengthSafe(selected.nameEn).length?
+         <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
+          <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>نفس التركيز</Text>
+         </Pressable>:null}
+       </View>
+
+       {equivalents.length===0?
+        <Text style={s.eqEmpty}>لا توجد مثائل مطابقة.</Text>:
+        equivalents.map(item=>
+         <Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
+          <View style={s.eqMain}>
+           <Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
+           {item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}
+           <Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text>
+          </View>
+          <Text style={s.eqPrice}>{price(item.price)}</Text>
+         </Pressable>
+        )
+       }
+      </View>
+     </ScrollView>}
     </View>
    </SafeAreaView>
   </Modal>
  </SafeAreaView>;
 }
 
+function getStrengthSafe(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""))?[1]:[]}
 function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
 
 const s=StyleSheet.create({
@@ -155,7 +189,24 @@ price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFont
  bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#FFF",borderTopWidth:1,borderTopColor:"#E1E7E5",padding:8,alignItems:"center"},
  call:{color:"#0B7468",fontWeight:"700"},
  back:{color:"#0B7468",fontWeight:"700",paddingVertical:12},
- detail:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
+ detailScroll:{paddingBottom:110},
+detail:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
+eqSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
+eqTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right"},
+eqHint:{fontSize:12,color:"#7A8582",textAlign:"right",marginTop:3},
+eqFilters:{flexDirection:"row-reverse",gap:8,marginTop:10,marginBottom:10},
+eqChip:{borderWidth:1,borderColor:"#CBD7D4",borderRadius:16,paddingHorizontal:12,paddingVertical:7,backgroundColor:"#FFF"},
+eqChipActive:{backgroundColor:"#DDEFEA",borderColor:"#0B7468"},
+eqChipText:{fontSize:12,color:"#43504D"},
+eqChipTextActive:{fontSize:12,color:"#0B7468",fontWeight:"700"},
+eqEmpty:{textAlign:"center",paddingVertical:18,color:"#7A8582"},
+eqCard:{backgroundColor:"#F8FAF9",borderWidth:1,borderColor:"#E0E7E5",borderRadius:8,padding:12,marginTop:8,flexDirection:"row-reverse",alignItems:"flex-start"},
+eqMain:{flex:1,minWidth:0,alignItems:"flex-end"},
+eqEn:{fontSize:15,fontWeight:"700",color:"#172321",textAlign:"right"},
+eqAr:{fontSize:14,color:"#0B7468",marginTop:3,textAlign:"right"},
+eqCo:{fontSize:11,color:"#7A8582",marginTop:5,textAlign:"right"},
+eqPrice:{width:70,fontSize:13,fontWeight:"800",color:"#0B7468",textAlign:"left",marginRight:10},
+
  detailEn:{fontSize:24,fontWeight:"800",color:"#0B7468",textAlign:"right"},
  detailAr:{fontSize:17,color:"#586460",marginTop:5,marginBottom:12,textAlign:"right"},
  info:{borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:12,flexDirection:"row-reverse"},
