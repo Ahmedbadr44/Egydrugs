@@ -50,8 +50,8 @@ export default function App(){
  const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameRoute,sameStrength}):[],[medicines,selected,sameRoute,sameStrength]);
 
  const placeholder=scope==="ingredient"
-   ?"اكتب المادة الفعالة بالإنجليزية"
-   :"اكتب اسم البراند بالعربي أو الإنجليزي";
+   ?"Search active ingredient in English"
+   :"Search brand name in Arabic or English";
 
  const openDrug=item=>{
   setSameRoute(false);setSameStrength(false);setSelected(item);
