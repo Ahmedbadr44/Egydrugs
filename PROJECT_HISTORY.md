@@ -542,3 +542,10 @@ Before changing anything:
 - Verified the clinical dosage fields contain no Arabic characters after import.
 - Created `public.dosage_reference_before_english_20261006` as a pre-import backup.
 - No automatic Arabic-to-English translation was used; the supplied English wording is now the source text for the dosage reference.
+
+
+## 36. 2026-10-06 — English-only physician-facing dosage UI
+- Finalized the React Native dosage-reference interface as English/LTR for the physician-facing workflow.
+- Removed the remaining Arabic search placeholders from the main search UI while keeping Arabic input support for Brand search.
+- The displayed dosage and clinical reference data remain English-only.
+- Kept the same Supabase `public.dosage_reference` source and the existing high-quality search engine.
