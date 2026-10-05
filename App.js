@@ -48,12 +48,14 @@ export default function App(){
 
  const card=({item})=><Pressable style={s.card} onPress={()=>setSelected(item)}>
   <View style={s.main}>
-   <Text style={s.en}>{item.nameEn||"-"}</Text>
-   {item.nameAr?<Text style={s.ar}>{item.nameAr}</Text>:null}
-   {item.ingredient?<Text style={s.sc}>{item.ingredient}</Text>:null}
-   <Text style={s.co}>{item.manufacturer||"-"}</Text>
+   <Text style={s.en} numberOfLines={3}>{item.nameEn||"-"}</Text>
+   {item.nameAr?<Text style={s.ar} numberOfLines={2}>{item.nameAr}</Text>:null}
+   {item.ingredient?<Text style={s.sc} numberOfLines={3}>{item.ingredient}</Text>:null}
+   <Text style={s.co} numberOfLines={2}>{item.manufacturer||"-"}</Text>
   </View>
-  <Text style={s.price}>{price(item.price)}</Text>
+  <View style={s.priceBox}>
+   <Text style={s.price} numberOfLines={1}>{price(item.price)}</Text>
+  </View>
  </Pressable>;
 
  return <SafeAreaView style={s.safe}>
@@ -142,7 +144,8 @@ const s=StyleSheet.create({
  ar:{marginTop:4,fontSize:15,color:"#0B7468"},
  sc:{marginTop:5,fontSize:13,color:"#707C79",textAlign:"right"},
  co:{marginTop:6,fontSize:12,color:"#7A8582"},
- price:{fontSize:14,fontWeight:"800",color:"#0B7468",marginLeft:10},
+ priceBox:{width:82,flexShrink:0,marginRight:0,marginLeft:12,alignItems:"flex-start",paddingTop:1},
+price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFontPadding:false},
  center:{flex:1,alignItems:"center",justifyContent:"center",padding:30},
  ready:{fontSize:20,fontWeight:"800"},
  status:{marginTop:8,color:"#68736F",textAlign:"center"},
