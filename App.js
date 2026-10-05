@@ -3,7 +3,7 @@ import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaVi
 import{WebView}from"react-native-webview";
 import{supabase}from"./src/lib/supabase";
 import{useDrugSearch}from"./src/search/useDrugSearch";
-import{getEquivalents}from"./src/equivalents";
+import{getEquivalents,ingredientKey}from"./src/equivalents";
 I18nManager.allowRTL(true);
 const PAGE_SIZE=1000,PHONE="01030950177";
 const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" ج.م";
@@ -54,8 +54,19 @@ export default function App(){
 
  const openDrug=async item=>{
   setSameRoute(false);setSameStrength(false);setSelected({...item,medicalInfo:null});setDetailLoading(true);
-  const r=await supabase.from("drug_medical_info").select("uses").eq("drug_id",item.id).maybeSingle();
-  if(!r.error) setSelected(prev=>prev&&String(prev.id)===String(item.id)?{...prev,medicalInfo:r.data||null}:prev);
+  const type=String(item.productType||"").toUpperCase();
+  let info={uses:[]};
+  if(type==="MEDICINE"||type==="COSMETIC"){
+   const keys=[...new Set(String(item.ingredient||"").split(/[+;,/]+/).map(x=>ingredientKey(x)).filter(Boolean))];
+   if(keys.length){
+    const r=await supabase.from("active_ingredient_medical_info").select("ingredient_key,medical_uses,cosmetic_uses").in("ingredient_key",keys);
+    if(!r.error){
+     const field=type==="MEDICINE"?"medical_uses":"cosmetic_uses";
+     info.uses=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x[field])?x[field]:[]))];
+    }
+   }
+  }
+  setSelected(prev=>prev&&String(prev.id)===String(item.id)?{...prev,medicalInfo:info}:prev);
   setDetailLoading(false);
 };
  const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.manufacturer].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
@@ -142,7 +153,7 @@ export default function App(){
        <View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل الاستخدامات...</Text></View>:
        selected.medicalInfo?.uses?.length?
        <View style={s.medicalSection}>
-        <Text style={s.medicalTitle}>الاستخدامات</Text>
+        <Text style={s.medicalTitle}>{String(selected.productType||"").toUpperCase()==="COSMETIC"?"الاستخدام التجميلي":"الاستخدام الطبي"}</Text>
         {selected.medicalInfo.uses.map((x,i)=><Text key={i} style={s.medicalItem}>• {x}</Text>)}
        </View>:null}
 
