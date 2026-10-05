@@ -15,7 +15,7 @@ object DrugRepository {
 
     private const val ASSET_NAME = "egyptian-drugs.csv"
     // Increment when the bundled CSV or the cached index format changes.
-    private const val CACHE_VERSION = 3
+    private const val CACHE_VERSION = 4
     private const val MAX_DRUGS = 100_000
 
     @Volatile
@@ -65,6 +65,7 @@ object DrugRepository {
                         route = input.readUTF(),
                         price = if (input.readBoolean()) input.readDouble() else null,
                         dosage = input.readUTF(),
+                        productType = if (input.readBoolean()) input.readUTF() else null,
                         remoteId = if (input.readBoolean()) input.readLong() else null
                     )
                     items.add(
@@ -112,6 +113,8 @@ object DrugRepository {
                     output.writeBoolean(drug.price != null)
                     drug.price?.let(output::writeDouble)
                     output.writeUTF(drug.dosage)
+                    output.writeBoolean(drug.productType != null)
+                    drug.productType?.let(output::writeUTF)
                     output.writeBoolean(drug.remoteId != null)
                     drug.remoteId?.let(output::writeLong)
                     output.writeUTF(item.litEn)
