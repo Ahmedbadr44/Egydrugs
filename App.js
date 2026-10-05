@@ -45,7 +45,7 @@ export default function App(){
  const drugs=useMemo(()=>searchResult.hits.map(h=>h.item),[searchResult.hits]);
  const [sameRoute,setSameRoute]=useState(false);
  const [sameStrength,setSameStrength]=useState(false);
- const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameRoute,sameStrength}):[],[medicines,selected,sameForm,sameStrength]);
+ const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameRoute,sameStrength}):[],[medicines,selected,sameRoute,sameStrength]);
 
  const placeholder=scope==="ingredient"
    ?"اكتب المادة الفعالة بالإنجليزية"
