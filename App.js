@@ -202,11 +202,11 @@ export default function App(){
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("guide");}}>
       <Text style={s.menuItemText}>دليل الأدوية</Text>
      </Pressable>
-     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("prices");}}>
-      <Text style={s.menuItemText}>تحديث الأسعار</Text>
-     </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("cosmetics");}}>
       <Text style={s.menuItemText}>دليل مستحضرات التجميل</Text>
+     </Pressable>
+     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("prices");}}>
+      <Text style={s.menuItemText}>تحديث الأسعار</Text>
      </Pressable>
     </Pressable>
    </Pressable>
