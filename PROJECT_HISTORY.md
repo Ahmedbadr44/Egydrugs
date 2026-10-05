@@ -519,3 +519,10 @@ Before changing anything:
 ## 32. 2026-10-06 — Menu order
 - Moved **دليل مستحضرات التجميل** directly under **دليل الأدوية** in the home menu.
 - Kept **تحديث الأسعار** below the two guide entries.
+
+
+## 33. 2026-10-06 — Dosage search unified with main search
+- The **حساب الجرعات** search now uses the same drug list, search engine, language behavior, fuzzy matching, result limit, and debounce settings as the main search.
+- Added the same **البراند / المادة الفعالة** search modes inside the dosage calculator.
+- Combination products are no longer hidden from search results. When selected, the app now looks up the dosage reference using the appropriate combination flag, so supported combination references can appear instead of being silently filtered out.
+- This fixes the previous issue where products such as **AUGMENTIN** were excluded before selection because their active ingredient is a combination.
