@@ -74,7 +74,6 @@ export function getEquivalents(rows,selected,{sameRoute=true,sameStrength=true}=
    if(String(row.id)===String(selected.id)) return false;
    const ing=ingredientKey(row.scientific_name||row.ingredient||"");
    if(!ing||ing!==selectedIng) return false;
-   if(sameRoute&&selectedHasRoute&&!String(row.route||"").toUpperCase().localeCompare(String(selected.route||"").toUpperCase())===0) return false;
    if(sameRoute&&selectedHasRoute && String(row.route||"").toUpperCase()!==String(selected.route||"").toUpperCase()) return false;
    const otherStrength=strengthOf(row.commercial_name_en||row.nameEn||"");
    if(sameStrength&&selectedStrength.length && JSON.stringify(otherStrength)!==JSON.stringify(selectedStrength)) return false;
