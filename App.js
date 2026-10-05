@@ -10,7 +10,7 @@ const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number
 const route=v=>({"ORAL.SOLID":"أقراص / كبسولات","ORAL.LIQUID":"شراب / سائل للشرب",INJECTION:"حقن",TOPICAL:"موضعي",EFF:"فوار",SPRAY:"بخاخ",EYE:"للعين",VAGINAL:"مهبلي",MOUTH:"للفم",RECTAL:"شرعي / لبوس",SOAP:"صابون",EAR:"للأذن"}[String(v||"").toUpperCase()]||v||"غير محدد");
 
 export default function App(){
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[detailLoading,setDetailLoading]=useState(false),[error,setError]=useState("");
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[detailLoading,setDetailLoading]=useState(false),[scientificOpen,setScientificOpen]=useState(false),[error,setError]=useState("");
 
  async function loadDrugs(){
   setLoading(true);setError("");
@@ -53,17 +53,21 @@ export default function App(){
    :"اكتب اسم البراند بالعربي أو الإنجليزي";
 
  const openDrug=async item=>{
-  setSameRoute(false);setSameStrength(false);setSelected({...item,medicalInfo:null});setDetailLoading(true);
+  setSameRoute(false);setSameStrength(false);setScientificOpen(false);setSelected({...item,medicalInfo:null});setDetailLoading(true);
   const type=String(item.productType||"").toUpperCase();
-  let info={uses:[]};
-  if(type==="MEDICINE"||type==="COSMETIC"){
-   const keys=[...new Set(String(item.ingredient||"").split(/[+;,/]+/).map(x=>ingredientKey(x)).filter(Boolean))];
-   if(keys.length){
-    const r=await supabase.from("active_ingredient_medical_info").select("ingredient_key,medical_uses,cosmetic_uses").in("ingredient_key",keys);
-    if(!r.error){
-     const field=type==="MEDICINE"?"medical_uses":"cosmetic_uses";
-     info.uses=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x[field])?x[field]:[]))];
-    }
+  let info={uses:[],dosage:[],sideEffects:[],contraindications:[],sourceName:"",sourceUrl:""};
+  const keys=[...new Set(String(item.ingredient||"").split(/[+;,/]+/).map(x=>ingredientKey(x)).filter(Boolean))];
+  if(keys.length){
+   const r=await supabase.from("active_ingredient_medical_info").select("ingredient_key,medical_uses,cosmetic_uses,dosage,side_effects,contraindications,source_name,source_url").in("ingredient_key",keys);
+   if(!r.error){
+    const field=type==="COSMETIC"?"cosmetic_uses":"medical_uses";
+    info.uses=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x[field])?x[field]:[]))];
+    info.dosage=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.dosage)?x.dosage:[]))];
+    info.sideEffects=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.side_effects)?x.side_effects:[]))];
+    info.contraindications=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.contraindications)?x.contraindications:[]))];
+    const source=(r.data||[]).find(x=>x.source_name||x.source_url);
+    info.sourceName=source?.source_name||"";
+    info.sourceUrl=source?.source_url||"";
    }
   }
   setSelected(prev=>prev&&String(prev.id)===String(item.id)?{...prev,medicalInfo:info}:prev);
@@ -133,59 +137,99 @@ export default function App(){
   <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}>
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
-     <Pressable onPress={()=>setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
+     <Pressable onPress={()=>scientificOpen?setScientificOpen(false):setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
-      <View style={s.detail}>
-       <Text style={s.detailLabel}>اسم الدواء</Text>
-       <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
-       <Text style={s.detailAr}>{selected.nameAr||"-"}</Text>
-       <Info l="المادة الفعالة" v={selected.ingredient}/>
-       <Info l="الشركة" v={selected.manufacturer}/>
-       <Info l="التصنيف الدوائي" v={selected.drugClass}/>
-       <Info l="الشكل الدوائي" v={route(selected.route)}/>
-       {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
-       <Info l="السعر" v={price(selected.price)}/>
-       <Pressable style={s.imageButton} onPress={openImageSearch}>
-        <Text style={s.imageButtonText}>عرض صورة الدواء</Text>
-       </Pressable>
-      </View>
-      {detailLoading?
-       <View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل الاستخدامات...</Text></View>:
-       selected.medicalInfo?.uses?.length?
-       <View style={s.medicalSection}>
-        <Text style={s.medicalTitle}>{String(selected.productType||"").toUpperCase()==="COSMETIC"?"الاستخدام التجميلي":"الاستخدام الطبي"}</Text>
-        {selected.medicalInfo.uses.map((x,i)=><Text key={i} style={s.medicalItem}>• {x}</Text>)}
-       </View>:null}
-
-      <View style={s.eqSection}>
-       <Text style={s.eqTitle}>المثائل ({equivalents.length})</Text>
-       <Text style={s.eqHint}>أدوية لها نفس المادة الفعالة</Text>
-       <View style={s.eqFilters}>
-        {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
-         <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
-          <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>Same Route</Text>
-         </Pressable>:null}
-        {selected.nameEn&&hasStrength(selected.nameEn)?
-         <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
-          <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>Same Concentration</Text>
-         </Pressable>:null}
+      {scientificOpen ? (
+       <View>
+        <View style={s.detail}>
+         <Text style={s.scientificScreenTitle}>Scientific Data</Text>
+         <Text style={s.scientificIngredient}>{selected.ingredient||"-"}</Text>
+        </View>
+        {detailLoading ? (
+         <View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل البيانات العلمية...</Text></View>
+        ) : (
+         <View>
+          {selected.medicalInfo?.uses?.length ? (
+           <View style={s.medicalSection}>
+            <Text style={s.medicalTitle}>{String(selected.productType||"").toUpperCase()==="COSMETIC"?"الاستخدام التجميلي":"الاستخدام الطبي"}</Text>
+            {selected.medicalInfo.uses.map((x,i)=><Text key={"use-"+i} style={s.medicalItem}>• {x}</Text>)}
+           </View>
+          ) : null}
+          {selected.medicalInfo?.dosage?.length ? (
+           <View style={s.medicalSection}>
+            <Text style={s.scientificSectionTitle}>Dosage</Text>
+            {selected.medicalInfo.dosage.map((x,i)=><Text key={"dose-"+i} style={s.medicalItem}>• {x}</Text>)}
+           </View>
+          ) : null}
+          {selected.medicalInfo?.sideEffects?.length ? (
+           <View style={s.medicalSection}>
+            <Text style={s.scientificSectionTitle}>Side Effects</Text>
+            {selected.medicalInfo.sideEffects.map((x,i)=><Text key={"side-"+i} style={s.medicalItem}>• {x}</Text>)}
+           </View>
+          ) : null}
+          {selected.medicalInfo?.contraindications?.length ? (
+           <View style={s.medicalSection}>
+            <Text style={s.scientificSectionTitle}>Contraindications</Text>
+            {selected.medicalInfo.contraindications.map((x,i)=><Text key={"contra-"+i} style={s.medicalItem}>• {x}</Text>)}
+           </View>
+          ) : null}
+          {(selected.medicalInfo?.sourceName||selected.medicalInfo?.sourceUrl) ? (
+           <View style={s.sourceSection}>
+            <Text style={s.scientificSectionTitle}>Source</Text>
+            {selected.medicalInfo.sourceName?<Text style={s.sourceText}>{selected.medicalInfo.sourceName}</Text>:null}
+            {selected.medicalInfo.sourceUrl?<Text style={s.sourceText}>{selected.medicalInfo.sourceUrl}</Text>:null}
+           </View>
+          ) : null}
+         </View>
+        )}
        </View>
-
-       {equivalents.length===0?
-        <Text style={s.eqEmpty}>لا توجد مثائل مطابقة.</Text>:
-        equivalents.map(item=>
-         <Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
-          <View style={s.eqMain}>
-           <Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
-           {item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}
-           <Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text>
-          </View>
-          <Text style={s.eqPrice}>{price(item.price)}</Text>
+      ) : (
+       <>
+        <View style={s.detail}>
+         <Text style={s.detailLabel}>اسم الدواء</Text>
+         <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
+         <Text style={s.detailAr}>{selected.nameAr||"-"}</Text>
+         <Info l="المادة الفعالة" v={selected.ingredient}/>
+         <Info l="الشركة" v={selected.manufacturer}/>
+         <Info l="التصنيف الدوائي" v={selected.drugClass}/>
+         <Info l="الشكل الدوائي" v={route(selected.route)}/>
+         {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
+         <Info l="السعر" v={price(selected.price)}/>
+         <Pressable style={s.scientificButton} onPress={()=>setScientificOpen(true)}>
+          <Text style={s.scientificButtonText}>Scientific Data</Text>
          </Pressable>
-        )
-       }
-      </View>
-     </ScrollView>}
+         <Pressable style={s.imageButton} onPress={openImageSearch}>
+          <Text style={s.imageButtonText}>عرض صورة الدواء</Text>
+         </Pressable>
+        </View>
+        <View style={s.eqSection}>
+         <Text style={s.eqTitle}>المثائل ({equivalents.length})</Text>
+         <Text style={s.eqHint}>أدوية لها نفس المادة الفعالة</Text>
+         <View style={s.eqFilters}>
+          {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
+           <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
+            <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>Same Route</Text>
+           </Pressable>:null}
+          {selected.nameEn&&hasStrength(selected.nameEn)?
+           <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
+            <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>Same Concentration</Text>
+           </Pressable>:null}
+         </View>
+         {equivalents.length===0?
+          <Text style={s.eqEmpty}>لا توجد مثائل مطابقة.</Text>:
+          equivalents.map(item=><Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
+           <View style={s.eqMain}>
+            <Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
+            {item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}
+            <Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text>
+           </View>
+           <Text style={s.eqPrice}>{price(item.price)}</Text>
+          </Pressable>)
+         }
+        </View>
+       </>
+      )}
+     </ScrollView>}iew>}
     </View>
    </SafeAreaView>
   </Modal>
@@ -245,6 +289,13 @@ price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFont
  call:{color:"#0B7468",fontWeight:"700"},
  back:{color:"#0B7468",fontWeight:"700",paddingVertical:12},
  detailScroll:{paddingBottom:110},
+scientificButton:{marginTop:16,backgroundColor:"#DDEFEA",borderWidth:1,borderColor:"#0B7468",borderRadius:10,paddingVertical:12,paddingHorizontal:16,alignItems:"center"},
+scientificButtonText:{color:"#0B7468",fontSize:15,fontWeight:"800"},
+scientificScreenTitle:{fontSize:24,fontWeight:"800",color:"#0B7468",textAlign:"right"},
+scientificIngredient:{fontSize:13,color:"#7A8582",marginTop:6,textAlign:"right"},
+scientificSectionTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right",marginBottom:8},
+sourceSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
+sourceText:{fontSize:12,color:"#172321",textAlign:"right",lineHeight:20},
 imageButton:{marginTop:16,backgroundColor:"#0B7468",borderRadius:10,paddingVertical:12,paddingHorizontal:16,alignItems:"center"},
 imageButtonText:{color:"#FFF",fontSize:15,fontWeight:"800"},
 browserHeader:{height:54,flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:14,backgroundColor:"#FFF",borderBottomWidth:1,borderBottomColor:"#E1E7E5"},
