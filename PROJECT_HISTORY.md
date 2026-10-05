@@ -499,3 +499,18 @@ Before changing anything:
 - The cosmetic guide, drug guide, and price-update sections remain separate screens for their next implementation phases.
 - This version is intentionally limited to single-ingredient products; combination-dose logic will be added later.
 - The uploaded 200-entry dosage reference contains Adult Dose, Pediatric Dose, Pregnancy Safety, Lactation Safety, and Side Effects fields. The app currently uses the dosage portion for the calculator.
+
+
+## 31. 2026-10-06 — Dosage Calculator UI simplified to reference mode
+- Removed patient age and weight inputs from the dosage calculator.
+- The calculator now works as a reference tool: the user searches for a commercial product, selects a single-ingredient medicine, and the app displays the active ingredient's dosage reference without calculating an individualized dose.
+- Added a dedicated `public.dosage_reference` table containing the uploaded 200-entry reference data with: Adult Dose, Pediatric Dose, Pregnancy Safety, Lactation Safety, Side Effects, combination flag, and source.
+- Imported all 200 source rows into `public.dosage_reference`; 199 are single-ingredient entries and 1 is a combination entry reserved for the future combination phase.
+- The first calculator phase explicitly shows only single-ingredient references; combination dosage logic will be implemented later.
+- The calculator UI now displays:
+  1. جرعة البالغين (Adult Dose)
+  2. جرعة الأطفال (Pediatric Dose)
+  3. أمان الاستخدام في الحمل (Pregnancy Safety)
+  4. أمان الاستخدام في الرضاعة (Lactation Safety)
+  5. أبرز الأعراض الجانبية (Common & Important Side Effects)
+- The existing **دليل مستحضرات التجميل** menu item remains available.
