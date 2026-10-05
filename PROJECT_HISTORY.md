@@ -514,3 +514,8 @@ Before changing anything:
   4. أمان الاستخدام في الرضاعة (Lactation Safety)
   5. أبرز الأعراض الجانبية (Common & Important Side Effects)
 - The existing **دليل مستحضرات التجميل** menu item remains available.
+
+
+## 32. 2026-10-06 — Menu order
+- Moved **دليل مستحضرات التجميل** directly under **دليل الأدوية** in the home menu.
+- Kept **تحديث الأسعار** below the two guide entries.
