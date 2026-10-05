@@ -7,7 +7,7 @@ import{getEquivalents,ingredientKey}from"./src/equivalents";
 I18nManager.allowRTL(true);
 const PAGE_SIZE=1000,PHONE="01030950177";
 const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" ج.م";
-const route=v=>({"ORAL.SOLID":"أقراص / كبسولات","ORAL.LIQUID":"شراب / سائل للشرب",INJECTION:"حقن",TOPICAL:"موضعي",EFF:"فوار",SPRAY:"بخاخ",EYE:"للعين",VAGINAL:"مهبلي",MOUTH:"للفم",RECTAL:"شرعي / لبوس",SOAP:"صابون",EAR:"للأذن"}[String(v||"").toUpperCase()]||v||"غير محدد");
+const route=v=>({"ORAL.SOLID":"Tablets / Capsules","ORAL.LIQUID":"Oral Liquid","INJECTION":"Injection",TOPICAL:"Topical",EFF:"Effervescent",SPRAY:"Spray",EYE:"Ophthalmic",VAGINAL:"Vaginal",MOUTH:"Oral",RECTAL:"Rectal",SOAP:"Soap",EAR:"Otic"}[String(v||"").toUpperCase()]||v||"غير محدد");
 
 export default function App(){
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
@@ -60,7 +60,7 @@ export default function App(){
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
   <View style={s.main}>
    <Text style={s.en} numberOfLines={3}>{item.nameEn||"-"}</Text>
-   {item.nameAr?<Text style={s.ar} numberOfLines={2}>{item.nameAr}</Text>:null}
+   
    {item.ingredient?<Text style={s.sc} numberOfLines={3}>{item.ingredient}</Text>:null}
    <Text style={s.co} numberOfLines={2}>{item.manufacturer||"-"}</Text>
   </View>
@@ -110,61 +110,61 @@ export default function App(){
    />
    <View style={s.chips}>
     <Pressable style={[s.chip,scope==="brand"&&s.sel]} onPress={()=>setScope("brand")}>
-     <Text style={scope==="brand"?s.selText:s.chipText}>البراند</Text>
+     <Text style={scope==="brand"?s.selText:s.chipText}>Brand</Text>
     </Pressable>
     <Pressable style={[s.chip,scope==="ingredient"&&s.sel]} onPress={()=>setScope("ingredient")}>
-     <Text style={scope==="ingredient"?s.selText:s.chipText}>المادة الفعالة</Text>
+     <Text style={scope==="ingredient"?s.selText:s.chipText}>Active Ingredient</Text>
     </Pressable>
    </View>
 
    {loading?
-    <View style={s.center}><ActivityIndicator/><Text style={s.status}>جاري تحميل قاعدة البيانات...</Text></View>:
+    <View style={s.center}><ActivityIndicator/><Text style={s.status}>Loading drug database...</Text></View>:
     error?
     <View style={s.center}>
-     <Text style={s.err}>تعذر تحميل قاعدة البيانات</Text>
+     <Text style={s.err}>Unable to load drug database</Text>
      <Text>{error}</Text>
-     <Pressable style={s.retry} onPress={loadDrugs}><Text style={s.retryText}>إعادة المحاولة</Text></Pressable>
+     <Pressable style={s.retry} onPress={loadDrugs}><Text style={s.retryText}>Retry</Text></Pressable>
     </View>:
     searchResult.notice==="ingredient-english-only"?
-    <View style={s.center}><Text style={s.status}>البحث بالمادة الفعالة بالإنجليزية فقط.</Text></View>:
+    <View style={s.center}><Text style={s.status}>Active-ingredient search is English only.</Text></View>:
     query.trim().length===0?
-    <View style={s.center}><Text style={s.ready}>ابحث عن دواء</Text><Text style={s.status}>اكتب اسم البراند أو المادة الفعالة</Text></View>:
+    <View style={s.center}><Text style={s.ready}>Search for a drug</Text><Text style={s.status}>Enter a brand name or active ingredient</Text></View>:
     query.trim().length===1?
-    <View style={s.center}><Text style={s.status}>اكتب حرفين على الأقل.</Text></View>:
+    <View style={s.center}><Text style={s.status}>Enter at least two characters.</Text></View>:
     drugs.length===0?
-    <View style={s.center}><Text style={s.status}>مفيش نتايج.</Text></View>:
+    <View style={s.center}><Text style={s.status}>No results found.</Text></View>:
     <FlatList data={drugs} keyExtractor={x=>String(x.id)} renderItem={card} contentContainerStyle={s.list}/>
    }
   </View>
 
   <View style={s.bottom}>
    <Pressable onPress={()=>Linking.openURL("tel:"+PHONE)}>
-    <Text style={s.call}>للتواصل والإعلان اتصل بنا: {PHONE}</Text>
+    <Text style={s.call}>Contact & Advertising: {PHONE}</Text>
    </Pressable>
   </View>
 
   <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}>
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
-     <Pressable onPress={()=>setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
+     <Pressable onPress={()=>setSelected(null)}><Text style={s.back}>Back</Text></Pressable>
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
       <View style={s.detail}>
-       <Text style={s.detailLabel}>اسم الدواء</Text>
+       <Text style={s.detailLabel}>Drug Name</Text>
        <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
-       <Text style={s.detailAr}>{selected.nameAr||"-"}</Text>
-       <Info l="المادة الفعالة" v={selected.ingredient}/>
-       <Info l="الشركة" v={selected.manufacturer}/>
-       <Info l="التصنيف الدوائي" v={selected.drugClass}/>
-       <Info l="الشكل الدوائي" v={route(selected.route)}/>
-       {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
-       <Info l="السعر" v={price(selected.price)}/>
+       <Text style={s.detailAr}>{selected.nameEn||"-"}</Text>
+       <Info l="Active Ingredient" v={selected.ingredient}/>
+       <Info l="Manufacturer" v={selected.manufacturer}/>
+       <Info l="Drug Class" v={selected.drugClass}/>
+       <Info l="Dosage Form" v={route(selected.route)}/>
+       {selected.productType?<Info l="Product Type" v={productTypeLabel(selected.productType)}/>:null}
+       <Info l="Price" v={price(selected.price)}/>
        <Pressable style={s.imageButton} onPress={openImageSearch}>
-        <Text style={s.imageButtonText}>عرض صورة الدواء</Text>
+        <Text style={s.imageButtonText}>Drug Images</Text>
        </Pressable>
       </View>
       <View style={s.eqSection}>
-       <Text style={s.eqTitle}>المثائل ({equivalents.length})</Text>
-       <Text style={s.eqHint}>أدوية لها نفس المادة الفعالة</Text>
+       <Text style={s.eqTitle}>Equivalent Products ({equivalents.length})</Text>
+       <Text style={s.eqHint}>Products with the same active ingredient</Text>
        <View style={s.eqFilters}>
         {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
          <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
@@ -176,11 +176,11 @@ export default function App(){
          </Pressable>:null}
        </View>
        {equivalents.length===0?
-        <Text style={s.eqEmpty}>لا توجد مثائل مطابقة.</Text>:
+        <Text style={s.eqEmpty}>No matching equivalents.</Text>:
         equivalents.map(item=><Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
          <View style={s.eqMain}>
           <Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
-          {item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}
+          
           <Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text>
          </View>
          <Text style={s.eqPrice}>{price(item.price)}</Text>
@@ -195,18 +195,18 @@ export default function App(){
   <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={()=>setMenuOpen(false)}>
    <Pressable style={s.menuOverlay} onPress={()=>setMenuOpen(false)}>
     <Pressable style={s.menuPanel} onPress={e=>e.stopPropagation()}>
-     <Text style={s.menuTitle}>القائمة</Text>
+     <Text style={s.menuTitle}>Menu</Text>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("dose");}}>
-      <Text style={s.menuItemText}>حساب الجرعات</Text>
+      <Text style={s.menuItemText}>Drug Dosing Reference</Text>
      </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("guide");}}>
-      <Text style={s.menuItemText}>دليل الأدوية</Text>
+      <Text style={s.menuItemText}>Drug Guide</Text>
      </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("cosmetics");}}>
-      <Text style={s.menuItemText}>دليل مستحضرات التجميل</Text>
+      <Text style={s.menuItemText}>Cosmetics Guide</Text>
      </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("prices");}}>
-      <Text style={s.menuItemText}>تحديث الأسعار</Text>
+      <Text style={s.menuItemText}>Price Updates</Text>
      </Pressable>
     </Pressable>
    </Pressable>
@@ -215,61 +215,61 @@ export default function App(){
   <Modal visible={!!toolScreen} animationType="slide" onRequestClose={()=>setToolScreen(null)}>
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
-     <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>رجوع</Text></Pressable>
+     <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>Back</Text></Pressable>
      {toolScreen==="dose" ? (
       <ScrollView contentContainerStyle={s.toolScroll}>
        <View style={s.toolPage}>
-        <Text style={s.toolTitle}>حساب الجرعات</Text>
-        <Text style={s.toolHint}>ابحث بنفس طريقة البحث الأساسية، ثم اختر الدواء لمراجعة الجرعة والمعلومات المرجعية المتاحة.</Text>
-        <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"اكتب المادة الفعالة بالإنجليزية":"اكتب اسم البراند بالعربي أو الإنجليزي"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
+        <Text style={s.toolTitle}>Drug Dosing Reference</Text>
+        <Text style={s.toolHint}>Use the same search engine as the main search, then select a product to review its dosing and clinical reference data.</Text>
+        <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"Search active ingredient in English":"Search brand name in Arabic or English"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
         <View style={s.chips}>
          <Pressable style={[s.chip,doseScope==="brand"&&s.sel]} onPress={()=>{setDoseScope("brand");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
-          <Text style={doseScope==="brand"?s.selText:s.chipText}>البراند</Text>
+          <Text style={doseScope==="brand"?s.selText:s.chipText}>Brand</Text>
          </Pressable>
          <Pressable style={[s.chip,doseScope==="ingredient"&&s.sel]} onPress={()=>{setDoseScope("ingredient");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
-          <Text style={doseScope==="ingredient"?s.selText:s.chipText}>المادة الفعالة</Text>
+          <Text style={doseScope==="ingredient"?s.selText:s.chipText}>Active Ingredient</Text>
          </Pressable>
         </View>
-        {doseSearch.notice==="ingredient-english-only" ? <Text style={s.doseError}>البحث بالمادة الفعالة بالإنجليزية فقط.</Text> : null}
+        {doseSearch.notice==="ingredient-english-only" ? <Text style={s.doseError}>Active-ingredient search is English only.</Text> : null}
         {doseQuery.trim().length>1&&!doseSelected ? (
          <View style={s.doseResults}>
           {doseResults.slice(0,20).map(item=><Pressable key={String(item.id)} style={s.doseResult} onPress={()=>selectDoseDrug(item)}>
            <Text style={s.doseResultEn}>{item.nameEn||"-"}</Text>
-           {item.nameAr?<Text style={s.doseResultAr}>{item.nameAr}</Text>:null}
+           
            <Text style={s.doseResultIng}>{item.ingredient||"-"}</Text>
           </Pressable>)}
-          {doseResults.length===0?<Text style={s.eqEmpty}>لا توجد نتائج.</Text>:null}
+          {doseResults.length===0?<Text style={s.eqEmpty}>No results found.</Text>:null}
          </View>
         ):null}
         {doseSelected ? (
          <View style={s.dosePanel}>
           <View style={s.doseSelectedCard}>
            <Text style={s.doseSelectedTitle}>{doseSelected.nameEn||"-"}</Text>
-           {doseSelected.nameAr?<Text style={s.doseSelectedAr}>{doseSelected.nameAr}</Text>:null}
-           <Text style={s.doseSelectedIng}>المادة الفعالة: {doseSelected.ingredient||"-"}</Text>
+           
+           <Text style={s.doseSelectedIng}>Active ingredient: {doseSelected.ingredient||"-"}</Text>
           </View>
-          {doseLoading?<View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل بيانات المادة الفعالة...</Text></View>:null}
+          {doseLoading?<View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>Loading clinical reference data...</Text></View>:null}
           {doseError?<Text style={s.doseError}>{doseError}</Text>:null}
           {doseInfo&&!doseError ? (
            <View>
-            <DoseSection title="جرعة البالغين (Adult Dose)" text={doseInfo.adult_dose}/>
-            <DoseSection title="جرعة الأطفال (Pediatric Dose)" text={doseInfo.pediatric_dose}/>
-            <DoseSection title="أمان الاستخدام في الحمل (Pregnancy Safety)" text={doseInfo.pregnancy_safety}/>
-            <DoseSection title="أمان الاستخدام في الرضاعة (Lactation Safety)" text={doseInfo.lactation_safety}/>
-            <DoseSection title="أبرز الأعراض الجانبية (Common & Important Side Effects)" text={doseInfo.side_effects}/>
-            {(doseInfo.source_name||doseInfo.source_url)?<Text style={s.sourceLine}>المصدر: {doseInfo.source_name||doseInfo.source_url}</Text>:null}
-            <Text style={s.disclaimer}>هذه المعلومات مرجعية وليست بديلًا عن التقييم السريري أو النشرة المعتمدة.</Text>
+            <DoseSection title="Adult Dose" text={doseInfo.adult_dose}/>
+            <DoseSection title="Pediatric Dose" text={doseInfo.pediatric_dose}/>
+            <DoseSection title="Pregnancy Safety" text={doseInfo.pregnancy_safety}/>
+            <DoseSection title="Lactation Safety" text={doseInfo.lactation_safety}/>
+            <DoseSection title="Common & Important Side Effects" text={doseInfo.side_effects}/>
+            {(doseInfo.source_name||doseInfo.source_url)?<Text style={s.sourceLine}>Source: {doseInfo.source_name||doseInfo.source_url}</Text>:null}
+            <Text style={s.disclaimer}>Reference information only. Not a substitute for clinical judgment or the approved product information.</Text>
            </View>
           ):null}
-          <Pressable style={s.resetButton} onPress={resetDose}><Text style={s.resetButtonText}>اختيار دواء آخر</Text></Pressable>
+          <Pressable style={s.resetButton} onPress={resetDose}><Text style={s.resetButtonText}>Select another drug</Text></Pressable>
          </View>
         ):null}
        </View>
       </ScrollView>
      ) : (
       <View style={s.toolPage}>
-       <Text style={s.toolTitle}>{toolScreen==="guide"?"دليل الأدوية":toolScreen==="prices"?"تحديث الأسعار":"دليل مستحضرات التجميل"}</Text>
-       <Text style={s.toolHint}>{toolScreen==="guide"?"قسم دليل الأدوية جاهز للمرحلة التالية.":toolScreen==="prices"?"قسم تحديث الأسعار جاهز للمرحلة التالية.":"قسم دليل مستحضرات التجميل جاهز للمرحلة التالية."}</Text>
+       <Text style={s.toolTitle}>{toolScreen==="guide"?"Drug Guide":toolScreen==="prices"?"Price Updates":"Cosmetics Guide"}</Text>
+       <Text style={s.toolHint}>{toolScreen==="guide"?"قسم Drug Guide جاهز للمرحلة التالية.":toolScreen==="prices"?"قسم Price Updates جاهز للمرحلة التالية.":"قسم Cosmetics Guide جاهز للمرحلة التالية."}</Text>
       </View>
      )}
     </View>
@@ -279,7 +279,7 @@ export default function App(){
   <Modal visible={!!imageUrl} animationType="slide" onRequestClose={()=>setImageUrl("")}>
    <SafeAreaView style={s.safe}>
     <View style={s.browserHeader}>
-     <Pressable style={s.browserBack} onPress={()=>setImageUrl("")}><Text style={s.browserBackText}>رجوع</Text></Pressable>
+     <Pressable style={s.browserBack} onPress={()=>setImageUrl("")}><Text style={s.browserBackText}>Back</Text></Pressable>
      <Text style={s.browserTitle}>صور الدواء</Text>
     </View>
     {imageUrl?<WebView
@@ -297,29 +297,30 @@ export default function App(){
 
 function productTypeLabel(v){
  const k=String(v||"").toUpperCase();
- return ({MEDICINE:"دواء",COSMETIC:"مستحضر تجميلي",SUPPLEMENT:"مكمل غذائي",MEDICAL_DEVICE:"مستلزم / جهاز طبي",OTHER:"أخرى"}[k]||v||"غير محدد");
+ return ({MEDICINE:"Medicine",COSMETIC:"Cosmetic",SUPPLEMENT:"Supplement",MEDICAL_DEVICE:"Medical Device",OTHER:"Other"}[k]||v||"غير محدد");
 }
 function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
 function DoseSection({title,text}){return <View style={s.doseSection}><Text style={s.doseSectionTitle}>{title}</Text><Text style={s.doseText}>{text||"غير متوفر في قاعدة البيانات الحالية."}</Text></View>}
 function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
 
 const s=StyleSheet.create({
- safe:{flex:1,backgroundColor:"#F7F9F8"},
- container:{flex:1,padding:16},
+ safe:{flex:1,backgroundColor:"#F7F9F8"}
+,
+ container:{flex:1,padding:16,direction:"ltr"},
  title:{fontSize:22,fontWeight:"800",color:"#0B7468",textAlign:"center",paddingVertical:16},
- search:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:13,fontSize:16,marginBottom:10},
- chips:{flexDirection:"row-reverse",gap:8,marginBottom:10},
+ search:{direction:"ltr",backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:13,fontSize:16,marginBottom:10},
+ chips:{flexDirection:"row",gap:8,marginBottom:10},
  chip:{borderWidth:1,borderColor:"#CBD7D4",borderRadius:18,paddingHorizontal:14,paddingVertical:8,backgroundColor:"#FFF"},
  sel:{backgroundColor:"#DDEFEA",borderColor:"#0B7468"},
  chipText:{color:"#43504D"},
  selText:{color:"#0B7468",fontWeight:"700"},
  list:{paddingBottom:90},
  card:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14,marginBottom:8,flexDirection:"row-reverse"},
- main:{flex:1,alignItems:"flex-end"},
+ main:{flex:1,alignItems:"flex-start",direction:"ltr"},
  en:{fontSize:17,fontWeight:"700",color:"#172321"},
  ar:{marginTop:4,fontSize:15,color:"#0B7468"},
- sc:{marginTop:5,fontSize:13,color:"#707C79",textAlign:"right"},
- co:{marginTop:6,fontSize:12,color:"#7A8582"},
+ sc:{marginTop:5,fontSize:13,color:"#707C79",textAlign:"left"},
+ co:{marginTop:6,fontSize:12,color:"#7A8582",textAlign:"left"},
  priceBox:{width:82,flexShrink:0,marginRight:0,marginLeft:12,alignItems:"flex-start",paddingTop:1},
 price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFontPadding:false},
  center:{flex:1,alignItems:"center",justifyContent:"center",padding:30},
@@ -341,35 +342,35 @@ menuPanel:{position:"absolute",top:58,right:16,width:230,backgroundColor:"#FFF",
 menuTitle:{fontSize:18,fontWeight:"800",color:"#172321",textAlign:"right",paddingVertical:8,paddingHorizontal:6},
 menuItem:{borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:14,paddingHorizontal:8},
 menuItemText:{fontSize:16,fontWeight:"700",color:"#0B7468",textAlign:"right"},
-toolPage:{flex:1,alignItems:"center",justifyContent:"center",padding:30,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:12,marginTop:20},
+toolPage:{flex:1,alignItems:"center",justifyContent:"center",padding:30,direction:"ltr",backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:12,marginTop:20},
 toolTitle:{fontSize:25,fontWeight:"800",color:"#0B7468",textAlign:"center"},
 toolHint:{fontSize:15,color:"#68736F",textAlign:"center",marginTop:12,lineHeight:22},
 imageButton:{marginTop:16,backgroundColor:"#0B7468",borderRadius:10,paddingVertical:12,paddingHorizontal:16,alignItems:"center"},
 imageButtonText:{color:"#FFF",fontSize:15,fontWeight:"800"},
-toolScroll:{paddingBottom:100},
-toolSearch:{width:"100%",backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:13,fontSize:16,marginTop:16,textAlign:"right"},
-doseResults:{width:"100%",marginTop:10},
+toolScroll:{paddingBottom:100,direction:"ltr"},
+toolSearch:{direction:"ltr",width:"100%",backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:13,fontSize:16,marginTop:16,textAlign:"right"},
+doseResults:{direction:"ltr",width:"100%",marginTop:10},
 doseResult:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:9,padding:12,marginBottom:7},
-doseResultEn:{fontSize:15,fontWeight:"700",color:"#172321",textAlign:"right"},
+doseResultEn:{fontSize:15,fontWeight:"700",color:"#172321",textAlign:"left"},
 doseResultAr:{fontSize:14,color:"#0B7468",marginTop:3,textAlign:"right"},
-doseResultIng:{fontSize:11,color:"#7A8582",marginTop:4,textAlign:"right"},
-dosePanel:{width:"100%",marginTop:14},
+doseResultIng:{fontSize:11,color:"#7A8582",marginTop:4,textAlign:"left"},
+dosePanel:{direction:"ltr",width:"100%",marginTop:14},
 doseSelectedCard:{backgroundColor:"#DDEFEA",borderWidth:1,borderColor:"#0B7468",borderRadius:10,padding:14},
-doseSelectedTitle:{fontSize:17,fontWeight:"800",color:"#0B7468",textAlign:"right"},
-doseSelectedAr:{fontSize:14,color:"#586460",marginTop:4,textAlign:"right"},
-doseSelectedIng:{fontSize:12,color:"#68736F",marginTop:4,textAlign:"right"},
+doseSelectedTitle:{fontSize:17,fontWeight:"800",color:"#0B7468",textAlign:"left"},
+doseSelectedAr:{fontSize:14,color:"#586460",marginTop:4,textAlign:"left"},
+doseSelectedIng:{fontSize:12,color:"#68736F",marginTop:4,textAlign:"left"},
 doseLabel:{fontSize:13,fontWeight:"700",color:"#43504D",textAlign:"right",marginTop:14,marginBottom:6},
 toolInput:{width:"100%",backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:12,fontSize:16,textAlign:"right"},
 doseHint:{marginTop:14,color:"#68736F",fontSize:13,textAlign:"right"},
-doseSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
-doseSectionTitle:{fontSize:19,fontWeight:"800",color:"#0B7468",textAlign:"right",marginBottom:8},
-doseText:{fontSize:14,color:"#172321",textAlign:"right",marginTop:6,lineHeight:22},
+doseSection:{direction:"ltr",marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
+doseSectionTitle:{fontSize:19,fontWeight:"800",color:"#0B7468",textAlign:"left",marginBottom:8},
+doseText:{fontSize:14,color:"#172321",textAlign:"left",marginTop:6,lineHeight:22},
 calculatedBox:{marginTop:12,backgroundColor:"#F1F7F5",borderRadius:9,padding:12},
 calculatedTitle:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"right"},
 calculatedText:{fontSize:16,fontWeight:"800",color:"#172321",textAlign:"right",marginTop:6,lineHeight:24},
-doseError:{marginTop:12,color:"#A33A32",fontSize:14,textAlign:"right",lineHeight:20},
-sourceLine:{marginTop:12,color:"#68736F",fontSize:12,textAlign:"right"},
-disclaimer:{marginTop:12,color:"#8A5A00",fontSize:11,textAlign:"right",lineHeight:18},
+doseError:{marginTop:12,color:"#A33A32",fontSize:14,textAlign:"left",lineHeight:20},
+sourceLine:{marginTop:12,color:"#68736F",fontSize:12,textAlign:"left"},
+disclaimer:{marginTop:12,color:"#8A5A00",fontSize:11,textAlign:"left",lineHeight:18},
 resetButton:{marginTop:14,borderWidth:1,borderColor:"#0B7468",borderRadius:10,paddingVertical:11,alignItems:"center"},
 resetButtonText:{color:"#0B7468",fontWeight:"800"},
 browserHeader:{height:54,flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:14,backgroundColor:"#FFF",borderBottomWidth:1,borderBottomColor:"#E1E7E5"},
@@ -387,7 +388,7 @@ eqChip:{borderWidth:1,borderColor:"#CBD7D4",borderRadius:16,paddingHorizontal:12
 eqChipActive:{backgroundColor:"#DDEFEA",borderColor:"#0B7468"},
 eqChipText:{fontSize:12,color:"#43504D"},
 eqChipTextActive:{fontSize:12,color:"#0B7468",fontWeight:"700"},
-eqEmpty:{textAlign:"center",paddingVertical:18,color:"#7A8582"},
+eqEmpty:{direction:"ltr",textAlign:"center",paddingVertical:18,color:"#7A8582"},
 eqCard:{backgroundColor:"#F8FAF9",borderWidth:1,borderColor:"#E0E7E5",borderRadius:8,padding:12,marginTop:8,flexDirection:"row-reverse",alignItems:"flex-start"},
 eqMain:{flex:1,minWidth:0,alignItems:"flex-end"},
 eqEn:{fontSize:15,fontWeight:"700",color:"#172321",textAlign:"right"},
@@ -396,7 +397,7 @@ eqCo:{fontSize:11,color:"#7A8582",marginTop:5,textAlign:"right"},
 eqPrice:{width:70,fontSize:13,fontWeight:"800",color:"#0B7468",textAlign:"left",marginRight:10},
 
  detailEn:{fontSize:24,fontWeight:"800",color:"#0B7468",textAlign:"right"},
- detailAr:{fontSize:17,color:"#586460",marginTop:5,marginBottom:12,textAlign:"right"},
+ detailAr:{fontSize:17,color:"#586460",marginTop:5,marginBottom:12,textAlign:"left"},
  info:{borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:12,flexDirection:"row-reverse"},
  label:{width:"36%",color:"#7A8582",textAlign:"right"},
  value:{width:"64%",color:"#172321",textAlign:"right"}
