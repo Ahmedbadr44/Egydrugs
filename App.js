@@ -10,7 +10,7 @@ const price=v=>v==null?"غير متوفر":(Number.isInteger(Number(v))?v:Number
 const route=v=>({"ORAL.SOLID":"أقراص / كبسولات","ORAL.LIQUID":"شراب / سائل للشرب",INJECTION:"حقن",TOPICAL:"موضعي",EFF:"فوار",SPRAY:"بخاخ",EYE:"للعين",VAGINAL:"مهبلي",MOUTH:"للفم",RECTAL:"شرعي / لبوس",SOAP:"صابون",EAR:"للأذن"}[String(v||"").toUpperCase()]||v||"غير محدد");
 
 export default function App(){
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[detailLoading,setDetailLoading]=useState(false),[scientificOpen,setScientificOpen]=useState(false),[error,setError]=useState("");
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
 
  async function loadDrugs(){
   setLoading(true);setError("");
@@ -52,25 +52,8 @@ export default function App(){
    ?"اكتب المادة الفعالة بالإنجليزية"
    :"اكتب اسم البراند بالعربي أو الإنجليزي";
 
- const openDrug=async item=>{
-  setSameRoute(false);setSameStrength(false);setScientificOpen(false);setSelected({...item,medicalInfo:null});setDetailLoading(true);
-  const r=await supabase.from("drug_medical_effective")
-    .select("drug_id,uses,dosage,side_effects,contraindications,source_url,source_name")
-    .eq("drug_id",item.id)
-    .maybeSingle();
-  let info={uses:[],dosage:[],sideEffects:[],contraindications:[],sourceName:"",sourceUrl:""};
-  if(!r.error&&r.data){
-    info={
-      uses:Array.isArray(r.data.uses)?r.data.uses:[],
-      dosage:Array.isArray(r.data.dosage)?r.data.dosage:[],
-      sideEffects:Array.isArray(r.data.side_effects)?r.data.side_effects:[],
-      contraindications:Array.isArray(r.data.contraindications)?r.data.contraindications:[],
-      sourceName:r.data.source_name||"",
-      sourceUrl:r.data.source_url||""
-    };
-  }
-  setSelected(prev=>prev&&String(prev.id)===String(item.id)?{...prev,medicalInfo:info}:prev);
-  setDetailLoading(false);
+ const openDrug=item=>{
+  setSameRoute(false);setSameStrength(false);setSelected(item);
 };
  const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.manufacturer].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
@@ -88,7 +71,12 @@ export default function App(){
  return <SafeAreaView style={s.safe}>
   <StatusBar barStyle="dark-content"/>
   <View style={s.container}>
-   <Text style={s.title}>EgyMeds</Text>
+   <View style={s.headerRow}>
+    <Text style={s.title}>EgyMeds</Text>
+    <Pressable style={s.menuButton} onPress={()=>setMenuOpen(true)} accessibilityLabel="القائمة">
+     <Text style={s.menuIcon}>☰</Text>
+    </Pressable>
+   </View>
    <TextInput
     value={query}
     onChangeText={setQuery}
@@ -133,102 +121,88 @@ export default function App(){
    </Pressable>
   </View>
 
-  <Modal visible={!!selected} animationType="slide" onRequestClose={()=>scientificOpen?setScientificOpen(false):setSelected(null)}>
+  <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}>
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
-     <Pressable onPress={()=>scientificOpen?setScientificOpen(false):setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
+     <Pressable onPress={()=>setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
-      {scientificOpen ? (
-       <View>
-        <View style={s.detail}>
-         <Text style={s.scientificScreenTitle}>Scientific Data</Text>
-         <Text style={s.scientificIngredient}>{selected.ingredient||"-"}</Text>
-        </View>
-        {detailLoading ? (
-         <View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل البيانات العلمية...</Text></View>
-        ) : (
-         <View>
-          {selected.medicalInfo?.uses?.length ? (
-           <View style={s.medicalSection}>
-            <Text style={s.medicalTitle}>{String(selected.productType||"").toUpperCase()==="COSMETIC"?"الاستخدام التجميلي":"الاستخدام الطبي"}</Text>
-            {selected.medicalInfo.uses.map((x,i)=><Text key={"use-"+i} style={s.medicalItem}>• {x}</Text>)}
-           </View>
-          ) : null}
-          {selected.medicalInfo?.dosage?.length ? (
-           <View style={s.medicalSection}>
-            <Text style={s.scientificSectionTitle}>Dosage</Text>
-            {selected.medicalInfo.dosage.map((x,i)=><Text key={"dose-"+i} style={s.medicalItem}>• {x}</Text>)}
-           </View>
-          ) : null}
-          {selected.medicalInfo?.sideEffects?.length ? (
-           <View style={s.medicalSection}>
-            <Text style={s.scientificSectionTitle}>Side Effects</Text>
-            {selected.medicalInfo.sideEffects.map((x,i)=><Text key={"side-"+i} style={s.medicalItem}>• {x}</Text>)}
-           </View>
-          ) : null}
-          {selected.medicalInfo?.contraindications?.length ? (
-           <View style={s.medicalSection}>
-            <Text style={s.scientificSectionTitle}>Contraindications</Text>
-            {selected.medicalInfo.contraindications.map((x,i)=><Text key={"contra-"+i} style={s.medicalItem}>• {x}</Text>)}
-           </View>
-          ) : null}
-          {(selected.medicalInfo?.sourceName||selected.medicalInfo?.sourceUrl) ? (
-           <View style={s.sourceSection}>
-            <Text style={s.scientificSectionTitle}>Source</Text>
-            {selected.medicalInfo.sourceName?<Text style={s.sourceText}>{selected.medicalInfo.sourceName}</Text>:null}
-            {selected.medicalInfo.sourceUrl?<Text style={s.sourceText}>{selected.medicalInfo.sourceUrl}</Text>:null}
-           </View>
-          ) : null}
-         </View>
-        )}
+      <View style={s.detail}>
+       <Text style={s.detailLabel}>اسم الدواء</Text>
+       <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
+       <Text style={s.detailAr}>{selected.nameAr||"-"}</Text>
+       <Info l="المادة الفعالة" v={selected.ingredient}/>
+       <Info l="الشركة" v={selected.manufacturer}/>
+       <Info l="التصنيف الدوائي" v={selected.drugClass}/>
+       <Info l="الشكل الدوائي" v={route(selected.route)}/>
+       {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
+       <Info l="السعر" v={price(selected.price)}/>
+       <Pressable style={s.imageButton} onPress={openImageSearch}>
+        <Text style={s.imageButtonText}>عرض صورة الدواء</Text>
+       </Pressable>
+      </View>
+      <View style={s.eqSection}>
+       <Text style={s.eqTitle}>المثائل ({equivalents.length})</Text>
+       <Text style={s.eqHint}>أدوية لها نفس المادة الفعالة</Text>
+       <View style={s.eqFilters}>
+        {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
+         <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
+          <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>Same Route</Text>
+         </Pressable>:null}
+        {selected.nameEn&&hasStrength(selected.nameEn)?
+         <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
+          <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>Same Concentration</Text>
+         </Pressable>:null}
        </View>
-      ) : (
-       <>
-        <View style={s.detail}>
-         <Text style={s.detailLabel}>اسم الدواء</Text>
-         <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
-         <Text style={s.detailAr}>{selected.nameAr||"-"}</Text>
-         <Info l="المادة الفعالة" v={selected.ingredient}/>
-         <Info l="الشركة" v={selected.manufacturer}/>
-         <Info l="التصنيف الدوائي" v={selected.drugClass}/>
-         <Info l="الشكل الدوائي" v={route(selected.route)}/>
-         {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
-         <Info l="السعر" v={price(selected.price)}/>
-         <Pressable style={s.scientificButton} onPress={()=>setScientificOpen(true)}>
-          <Text style={s.scientificButtonText}>Scientific Data</Text>
-         </Pressable>
-         <Pressable style={s.imageButton} onPress={openImageSearch}>
-          <Text style={s.imageButtonText}>عرض صورة الدواء</Text>
-         </Pressable>
-        </View>
-        <View style={s.eqSection}>
-         <Text style={s.eqTitle}>المثائل ({equivalents.length})</Text>
-         <Text style={s.eqHint}>أدوية لها نفس المادة الفعالة</Text>
-         <View style={s.eqFilters}>
-          {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
-           <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
-            <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>Same Route</Text>
-           </Pressable>:null}
-          {selected.nameEn&&hasStrength(selected.nameEn)?
-           <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
-            <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>Same Concentration</Text>
-           </Pressable>:null}
+       {equivalents.length===0?
+        <Text style={s.eqEmpty}>لا توجد مثائل مطابقة.</Text>:
+        equivalents.map(item=><Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
+         <View style={s.eqMain}>
+          <Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
+          {item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}
+          <Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text>
          </View>
-         {equivalents.length===0?
-          <Text style={s.eqEmpty}>لا توجد مثائل مطابقة.</Text>:
-          equivalents.map(item=><Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
-           <View style={s.eqMain}>
-            <Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
-            {item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}
-            <Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text>
-           </View>
-           <Text style={s.eqPrice}>{price(item.price)}</Text>
-          </Pressable>)
-         }
-        </View>
-       </>
-      )}
-     </ScrollView>}
+         <Text style={s.eqPrice}>{price(item.price)}</Text>
+        </Pressable>)
+       }
+      </View>
+     </ScrollView>}}
+    </View>
+   </SafeAreaView>
+  </Modal>
+
+  <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={()=>setMenuOpen(false)}>
+   <Pressable style={s.menuOverlay} onPress={()=>setMenuOpen(false)}>
+    <Pressable style={s.menuPanel} onPress={e=>e.stopPropagation()}>
+     <Text style={s.menuTitle}>القائمة</Text>
+     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("dose");}}>
+      <Text style={s.menuItemText}>حساب الجرعات</Text>
+     </Pressable>
+     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("guide");}}>
+      <Text style={s.menuItemText}>دليل الأدوية</Text>
+     </Pressable>
+     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("prices");}}>
+      <Text style={s.menuItemText}>تحديث الأسعار</Text>
+     </Pressable>
+    </Pressable>
+   </Pressable>
+  </Modal>
+
+  <Modal visible={!!toolScreen} animationType="slide" onRequestClose={()=>setToolScreen(null)}>
+   <SafeAreaView style={s.safe}>
+    <View style={s.container}>
+     <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>رجوع</Text></Pressable>
+     <View style={s.toolPage}>
+      <Text style={s.toolTitle}>
+       {toolScreen==="dose"?"حساب الجرعات":toolScreen==="guide"?"دليل الأدوية":"تحديث الأسعار"}
+      </Text>
+      <Text style={s.toolHint}>
+       {toolScreen==="dose"
+        ?"قسم حساب الجرعات جاهز للإضافة."
+        :toolScreen==="guide"
+        ?"قسم دليل الأدوية جاهز للإضافة."
+        :"قسم تحديث الأسعار جاهز للإضافة."}
+      </Text>
+     </View>
     </View>
    </SafeAreaView>
   </Modal>
@@ -288,13 +262,18 @@ price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFont
  call:{color:"#0B7468",fontWeight:"700"},
  back:{color:"#0B7468",fontWeight:"700",paddingVertical:12},
  detailScroll:{paddingBottom:110},
-scientificButton:{marginTop:16,backgroundColor:"#DDEFEA",borderWidth:1,borderColor:"#0B7468",borderRadius:10,paddingVertical:12,paddingHorizontal:16,alignItems:"center"},
-scientificButtonText:{color:"#0B7468",fontSize:15,fontWeight:"800"},
-scientificScreenTitle:{fontSize:24,fontWeight:"800",color:"#0B7468",textAlign:"right"},
-scientificIngredient:{fontSize:13,color:"#7A8582",marginTop:6,textAlign:"right"},
-scientificSectionTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right",marginBottom:8},
-sourceSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
-sourceText:{fontSize:12,color:"#172321",textAlign:"right",lineHeight:20},
+headerRow:{minHeight:56,position:"relative",justifyContent:"center",alignItems:"center"},
+title:{fontSize:22,fontWeight:"800",color:"#0B7468",textAlign:"center"},
+menuButton:{position:"absolute",right:0,top:4,width:46,height:46,borderRadius:10,backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",alignItems:"center",justifyContent:"center"},
+menuIcon:{fontSize:25,color:"#0B7468",fontWeight:"700",lineHeight:28},
+menuOverlay:{flex:1,backgroundColor:"rgba(0,0,0,0.18)"},
+menuPanel:{position:"absolute",top:58,right:16,width:230,backgroundColor:"#FFF",borderWidth:1,borderColor:"#DDE5E2",borderRadius:12,padding:12,shadowColor:"#000",shadowOpacity:0.12,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:5},
+menuTitle:{fontSize:18,fontWeight:"800",color:"#172321",textAlign:"right",paddingVertical:8,paddingHorizontal:6},
+menuItem:{borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:14,paddingHorizontal:8},
+menuItemText:{fontSize:16,fontWeight:"700",color:"#0B7468",textAlign:"right"},
+toolPage:{flex:1,alignItems:"center",justifyContent:"center",padding:30,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:12,marginTop:20},
+toolTitle:{fontSize:25,fontWeight:"800",color:"#0B7468",textAlign:"center"},
+toolHint:{fontSize:15,color:"#68736F",textAlign:"center",marginTop:12,lineHeight:22},
 imageButton:{marginTop:16,backgroundColor:"#0B7468",borderRadius:10,paddingVertical:12,paddingHorizontal:16,alignItems:"center"},
 imageButtonText:{color:"#FFF",fontSize:15,fontWeight:"800"},
 browserHeader:{height:54,flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:14,backgroundColor:"#FFF",borderBottomWidth:1,borderBottomColor:"#E1E7E5"},
@@ -303,10 +282,6 @@ browserBack:{paddingVertical:8,paddingHorizontal:8},
 browserBackText:{color:"#0B7468",fontWeight:"700"},
 webview:{flex:1,backgroundColor:"#FFF"},
 detail:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
-medicalLoading:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:16,alignItems:"center"},
-medicalSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
-medicalTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right",marginBottom:8},
-medicalItem:{fontSize:14,color:"#172321",textAlign:"right",marginTop:6,lineHeight:21},
 detailLabel:{fontSize:12,fontWeight:"700",color:"#7A8582",textAlign:"right",marginBottom:4},
 eqSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
 eqTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"right"},
