@@ -60,8 +60,8 @@ export default function App(){
   if(keys.length){
    const r=await supabase.from("active_ingredient_medical_info").select("ingredient_key,medical_uses,cosmetic_uses,dosage,side_effects,contraindications,source_name,source_url").in("ingredient_key",keys);
    if(!r.error){
-    const field=type==="COSMETIC"?"cosmetic_uses":"medical_uses";
-    info.uses=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x[field])?x[field]:[]))];
+    const field=type==="MEDICINE"?"medical_uses":type==="COSMETIC"?"cosmetic_uses":null;
+    info.uses=field?[...new Set((r.data||[]).flatMap(x=>Array.isArray(x[field])?x[field]:[]))]:[];
     info.dosage=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.dosage)?x.dosage:[]))];
     info.sideEffects=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.side_effects)?x.side_effects:[]))];
     info.contraindications=[...new Set((r.data||[]).flatMap(x=>Array.isArray(x.contraindications)?x.contraindications:[]))];
@@ -134,7 +134,7 @@ export default function App(){
    </Pressable>
   </View>
 
-  <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}>
+  <Modal visible={!!selected} animationType="slide" onRequestClose={()=>scientificOpen?setScientificOpen(false):setSelected(null)}>
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
      <Pressable onPress={()=>scientificOpen?setScientificOpen(false):setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
