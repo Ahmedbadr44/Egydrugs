@@ -448,3 +448,10 @@ Before changing anything:
 - Avoid unnecessary redesigns.
 - Avoid destructive SQL unless explicitly requested and verified.
 - Never store credentials in project history.
+
+## 23. 2026-10-05 — Mobile drug card uses by product type
+- Updated the phone app on `react-native` so each Drug record carries `productType` from Supabase.
+- The detail Uses card now displays `Medical Uses` for `MEDICINE` and `Cosmetic Uses` for `COSMETIC`.
+- The content is still supplied by `public.drug_medical_effective`; the app does not duplicate active-ingredient use data locally.
+- Increased cache version from 3 to 4 and sync protocol from 2 to 3 so existing installations fetch the new `product_type` field.
+- Paracetamol's current centralized Medical Uses will therefore appear on medicine products after sync.
