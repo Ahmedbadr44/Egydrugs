@@ -553,3 +553,9 @@ Before changing anything:
 - Updated the React Native app's Supabase query to load the new `description` and `uses_summary_en` fields from `public.drugs`.
 - The drug detail mapping now uses `description` as the displayed Drug Class value and `uses_summary_en` as the displayed Dosage Form value, with the previous fields kept as fallbacks.
 - This keeps the mobile app aligned with the latest database mapping for the 26,562-product dataset.
+
+## 38. 2026-10-06 — Restored Arabic EgyMeds interface
+- Restored the React Native app interface to Arabic/RTL as requested.
+- Restored Arabic labels for search, drug details, menu, equivalents, images, pricing, and dosage reference screens.
+- Restored display of the Arabic commercial name on drug cards, equivalents, and the detail screen.
+- Kept the latest database mapping: `description` is used for Drug Class and `uses_summary_en` is used for Dosage Form.
