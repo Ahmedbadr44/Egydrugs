@@ -111,46 +111,46 @@ export default function App(){
    />
    <View style={s.chips}>
     <Pressable style={[s.chip,scope==="brand"&&s.sel]} onPress={()=>setScope("brand")}>
-     <Text style={scope==="brand"?s.selText:s.chipText}>Brand</Text>
+     <Text style={scope==="brand"?s.selText:s.chipText}>الدواء</Text>
     </Pressable>
     <Pressable style={[s.chip,scope==="ingredient"&&s.sel]} onPress={()=>setScope("ingredient")}>
-     <Text style={scope==="ingredient"?s.selText:s.chipText}>Active Ingredient</Text>
+     <Text style={scope==="ingredient"?s.selText:s.chipText}>المادة الفعالة</Text>
     </Pressable>
    </View>
 
    {loading?
-    <View style={s.center}><ActivityIndicator/><Text style={s.status}>Loading drug database...</Text></View>:
+    <View style={s.center}><ActivityIndicator/><Text style={s.status}>جاري تحميل قاعدة بيانات الأدوية...</Text></View>:
     error?
     <View style={s.center}>
-     <Text style={s.err}>Unable to load drug database</Text>
+     <Text style={s.err}>تعذر تحميل قاعدة بيانات الأدوية</Text>
      <Text>{error}</Text>
-     <Pressable style={s.retry} onPress={loadDrugs}><Text style={s.retryText}>Retry</Text></Pressable>
+     <Pressable style={s.retry} onPress={loadDrugs}><Text style={s.retryText}>إعادة المحاولة</Text></Pressable>
     </View>:
     searchResult.notice==="ingredient-english-only"?
-    <View style={s.center}><Text style={s.status}>Active-ingredient search is English only.</Text></View>:
+    <View style={s.center}><Text style={s.status}>البحث بالمادة الفعالة متاح باللغة الإنجليزية فقط.</Text></View>:
     query.trim().length===0?
-    <View style={s.center}><Text style={s.ready}>Search for a drug</Text><Text style={s.status}>Enter a brand name or active ingredient</Text></View>:
+    <View style={s.center}><Text style={s.ready}>ابحث عن دواء</Text><Text style={s.status}>أدخل اسم الدواء أو المادة الفعالة</Text></View>:
     query.trim().length===1?
-    <View style={s.center}><Text style={s.status}>Enter at least two characters.</Text></View>:
+    <View style={s.center}><Text style={s.status}>أدخل حرفين على الأقل.</Text></View>:
     drugs.length===0?
-    <View style={s.center}><Text style={s.status}>No results found.</Text></View>:
+    <View style={s.center}><Text style={s.status}>لم يتم العثور على نتائج.</Text></View>:
     <FlatList data={drugs} keyExtractor={x=>String(x.id)} renderItem={card} contentContainerStyle={s.list}/>
    }
   </View>
 
   <View style={s.bottom}>
    <Pressable onPress={()=>Linking.openURL("tel:"+PHONE)}>
-    <Text style={s.call}>Contact & Advertising: {PHONE}</Text>
+    <Text style={s.call}>للتواصل والإعلان: {PHONE}</Text>
    </Pressable>
   </View>
 
   <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}>
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
-     <Pressable onPress={()=>setSelected(null)}><Text style={s.back}>Back</Text></Pressable>
+     <Pressable onPress={()=>setSelected(null)}><Text style={s.back}>رجوع</Text></Pressable>
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
       <View style={s.detail}>
-       <Text style={s.detailLabel}>Drug Name</Text>
+       <Text style={s.detailLabel}>اسم الدواء</Text>
        <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
        {selected.nameAr?<Text style={s.detailAr}>{selected.nameAr}</Text>:null}
        <Info l="المادة الفعالة" v={selected.ingredient}/>
@@ -160,24 +160,24 @@ export default function App(){
        {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
        <Info l="السعر" v={price(selected.price)}/>
        <Pressable style={s.imageButton} onPress={openImageSearch}>
-        <Text style={s.imageButtonText}>Drug Images</Text>
+        <Text style={s.imageButtonText}>صور الدواء</Text>
        </Pressable>
       </View>
       <View style={s.eqSection}>
-       <Text style={s.eqTitle}>Equivalent Products ({equivalents.length})</Text>
-       <Text style={s.eqHint}>Products with the same active ingredient</Text>
+       <Text style={s.eqTitle}>الأدوية البديلة ({equivalents.length})</Text>
+       <Text style={s.eqHint}>منتجات تحتوي على نفس المادة الفعالة</Text>
        <View style={s.eqFilters}>
         {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
          <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
-          <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>Same Route</Text>
+          <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>نفس الشكل الدوائي</Text>
          </Pressable>:null}
         {selected.nameEn&&hasStrength(selected.nameEn)?
          <Pressable style={[s.eqChip,sameStrength&&s.eqChipActive]} onPress={()=>setSameStrength(v=>!v)}>
-          <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>Same Concentration</Text>
+          <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>نفس التركيز</Text>
          </Pressable>:null}
        </View>
        {equivalents.length===0?
-        <Text style={s.eqEmpty}>No matching equivalents.</Text>:
+        <Text style={s.eqEmpty}>لا توجد أدوية بديلة مطابقة.</Text>:
         equivalents.map(item=><Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
          <View style={s.eqMain}>
           <Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
@@ -196,18 +196,18 @@ export default function App(){
   <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={()=>setMenuOpen(false)}>
    <Pressable style={s.menuOverlay} onPress={()=>setMenuOpen(false)}>
     <Pressable style={s.menuPanel} onPress={e=>e.stopPropagation()}>
-     <Text style={s.menuTitle}>Menu</Text>
+     <Text style={s.menuTitle}>القائمة</Text>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("dose");}}>
-      <Text style={s.menuItemText}>Drug Dosing Reference</Text>
+      <Text style={s.menuItemText}>حساب الجرعات</Text>
      </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("guide");}}>
-      <Text style={s.menuItemText}>Drug Guide</Text>
+      <Text style={s.menuItemText}>دليل الأدوية</Text>
      </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("cosmetics");}}>
-      <Text style={s.menuItemText}>Cosmetics Guide</Text>
+      <Text style={s.menuItemText}>دليل مستحضرات التجميل</Text>
      </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("prices");}}>
-      <Text style={s.menuItemText}>Price Updates</Text>
+      <Text style={s.menuItemText}>تحديث الأسعار</Text>
      </Pressable>
     </Pressable>
    </Pressable>
@@ -216,22 +216,22 @@ export default function App(){
   <Modal visible={!!toolScreen} animationType="slide" onRequestClose={()=>setToolScreen(null)}>
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
-     <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>Back</Text></Pressable>
+     <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>رجوع</Text></Pressable>
      {toolScreen==="dose" ? (
       <ScrollView contentContainerStyle={s.toolScroll}>
        <View style={s.toolPage}>
-        <Text style={s.toolTitle}>Drug Dosing Reference</Text>
-        <Text style={s.toolHint}>Use the same search engine as the main search, then select a product to review dosing and clinical reference data.</Text>
+        <Text style={s.toolTitle}>حساب الجرعات</Text>
+        <Text style={s.toolHint}>استخدم نفس محرك البحث الرئيسي، ثم اختر دواءً لعرض الجرعات والمعلومات الطبية المرجعية.</Text>
         <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"ابحث بالمادة الفعالة بالإنجليزية":"ابحث باسم الدواء"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
         <View style={s.chips}>
          <Pressable style={[s.chip,doseScope==="brand"&&s.sel]} onPress={()=>{setDoseScope("brand");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
-          <Text style={doseScope==="brand"?s.selText:s.chipText}>Brand</Text>
+          <Text style={doseScope==="brand"?s.selText:s.chipText}>الدواء</Text>
          </Pressable>
          <Pressable style={[s.chip,doseScope==="ingredient"&&s.sel]} onPress={()=>{setDoseScope("ingredient");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
-          <Text style={doseScope==="ingredient"?s.selText:s.chipText}>Active Ingredient</Text>
+          <Text style={doseScope==="ingredient"?s.selText:s.chipText}>المادة الفعالة</Text>
          </Pressable>
         </View>
-        {doseSearch.notice==="ingredient-english-only" ? <Text style={s.doseError}>Active-ingredient search is English only.</Text> : null}
+        {doseSearch.notice==="ingredient-english-only" ? <Text style={s.doseError}>البحث بالمادة الفعالة متاح باللغة الإنجليزية فقط.</Text> : null}
         {doseQuery.trim().length>1&&!doseSelected ? (
          <View style={s.doseResults}>
           {doseResults.slice(0,20).map(item=><Pressable key={String(item.id)} style={s.doseResult} onPress={()=>selectDoseDrug(item)}>
@@ -239,7 +239,7 @@ export default function App(){
            
            <Text style={s.doseResultIng}>{item.ingredient||"-"}</Text>
           </Pressable>)}
-          {doseResults.length===0?<Text style={s.eqEmpty}>No results found.</Text>:null}
+          {doseResults.length===0?<Text style={s.eqEmpty}>لم يتم العثور على نتائج.</Text>:null}
          </View>
         ):null}
         {doseSelected ? (
@@ -249,7 +249,7 @@ export default function App(){
            
            <Text style={s.doseSelectedIng}>المادة الفعالة: {doseSelected.ingredient||"-"}</Text>
           </View>
-          {doseLoading?<View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>Loading clinical reference data...</Text></View>:null}
+          {doseLoading?<View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل المعلومات الطبية المرجعية...</Text></View>:null}
           {doseError?<Text style={s.doseError}>{doseError}</Text>:null}
           {doseInfo&&!doseError ? (
            <View>
@@ -258,11 +258,11 @@ export default function App(){
             <DoseSection title="الأمان في الحمل" text={doseInfo.pregnancy_safety}/>
             <DoseSection title="الأمان في الرضاعة" text={doseInfo.lactation_safety}/>
             <DoseSection title="أهم وأشهر الأعراض الجانبية" text={doseInfo.side_effects}/>
-            {(doseInfo.source_name||doseInfo.source_url)?<Text style={s.sourceLine}>Source: {doseInfo.source_name||doseInfo.source_url}</Text>:null}
-            <Text style={s.disclaimer}>Reference information only. Not a substitute for clinical judgment or the approved product information.</Text>
+            {(doseInfo.source_name||doseInfo.source_url)?<Text style={s.sourceLine}>المصدر: {doseInfo.source_name||doseInfo.source_url}</Text>:null}
+            <Text style={s.disclaimer}>هذه المعلومات مرجعية فقط، ولا تُغني عن التقييم الطبي أو النشرة المعتمدة للمنتج.</Text>
            </View>
           ):null}
-          <Pressable style={s.resetButton} onPress={resetDose}><Text style={s.resetButtonText}>Select another drug</Text></Pressable>
+          <Pressable style={s.resetButton} onPress={resetDose}><Text style={s.resetButtonText}>اختر دواءً آخر</Text></Pressable>
          </View>
         ):null}
        </View>
@@ -280,8 +280,8 @@ export default function App(){
   <Modal visible={!!imageUrl} animationType="slide" onRequestClose={()=>setImageUrl("")}>
    <SafeAreaView style={s.safe}>
     <View style={s.browserHeader}>
-     <Pressable style={s.browserBack} onPress={()=>setImageUrl("")}><Text style={s.browserBackText}>Back</Text></Pressable>
-     <Text style={s.browserTitle}>Drug Images</Text>
+     <Pressable style={s.browserBack} onPress={()=>setImageUrl("")}><Text style={s.browserBackText}>رجوع</Text></Pressable>
+     <Text style={s.browserTitle}>صور الدواء</Text>
     </View>
     {imageUrl?<WebView
       source={{uri:imageUrl}}
