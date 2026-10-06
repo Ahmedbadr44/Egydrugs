@@ -104,9 +104,10 @@ export function getEquivalents(rows,selected,{sameRoute=false,sameStrength=false
    if(!ing||ing!==selectedIng) return false;
    const otherType=String(row.product_type||row.productType||"").trim().toUpperCase();
    if(selectedType&&otherType&&selectedType!==otherType) return false;
-   if(sameRoute&&selectedHasRoute){
-    const otherRoute=String(row.route||"").trim().toUpperCase();
-    if(!otherRoute||otherRoute==="UNKNOWN"||otherRoute!==selectedRoute) return false;
+   if(sameRoute){
+    const selectedForm=dosageFormOf(selected?.nameEn||selected?.commercial_name_en||"");
+    const otherForm=dosageFormOf(row?.nameEn||row?.commercial_name_en||"");
+    if(selectedForm==="unknown"||otherForm==="unknown"||selectedForm!==otherForm) return false;
    }
    if(sameStrength&&selectedStrength.length){
     const otherStrength=strengthOf(row.commercial_name_en||row.nameEn||"");
