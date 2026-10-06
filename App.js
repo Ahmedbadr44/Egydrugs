@@ -115,7 +115,7 @@ export default function App(){
     <Pressable style={s.headerIcon} onPress={()=>setMenuOpen(true)}><Text style={s.headerIconText}>☰</Text></Pressable>
     <View style={s.headerCenter}>
      <Text style={s.headerTitle}>EgyMeds</Text>
-     <Text style={s.headerDate}>{new Date().toLocaleDateString("en-GB").replace(/\\//g,"-")}</Text>
+     <Text style={s.headerDate}>{new Date().toLocaleDateString("en-GB").replace(/\//g,"-")}</Text>
     </View>
     <Pressable style={s.headerIcon} onPress={()=>setQuery("")}><Text style={s.headerIconText}>↻</Text></Pressable>
    </View>
