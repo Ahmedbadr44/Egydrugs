@@ -19,7 +19,7 @@ export default function App(){
    const rows=[];
    for(let from=0;;from+=PAGE_SIZE){
     const r=await supabase.from("drugs")
-      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,description,uses_summary_en,price_egp,price_old_egp,updated_at,source_units,product_type")
+      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,description,uses_summary_en,price_egp,price_old_egp,updated_at,product_type")
       .order("id",{ascending:true})
       .range(from,from+PAGE_SIZE-1);
     if(r.error)throw r.error;
@@ -38,7 +38,6 @@ export default function App(){
     productType:r.product_type||"",
     oldPrice:r.price_old_egp,
     updatedAt:r.updated_at,
-    units:r.source_units||""
    })));
   }catch(e){setError(e.message||"تعذر تحميل قاعدة بيانات الأدوية");}
   finally{setLoading(false);}
@@ -71,19 +70,16 @@ export default function App(){
   finally{setDetailLoading(false);}
 };
  const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.manufacturer].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
- const formatDate=v=>v?new Date(v).toLocaleDateString("ar-EG",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
   <View style={s.cardMain}>
    <Text style={s.cardNameEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
    {item.nameAr?<Text style={s.cardNameAr} numberOfLines={2}>{item.nameAr}</Text>:null}
    {item.ingredient?<Text style={s.cardIngredient} numberOfLines={2}>{item.ingredient}</Text>:null}
    <Text style={s.cardCompany} numberOfLines={1}>{item.manufacturer||"-"}</Text>
-   {item.units?<Text style={s.cardUnits}>{item.units} عبوة</Text>:null}
   </View>
   <View style={s.cardPriceCol}>
    <Text style={s.cardPrice}>{price(item.price).replace(" EGP"," ج.م")}</Text>
    {item.oldPrice!=null&&Number(item.oldPrice)>0?<Text style={s.cardOldPrice}>{Number(item.oldPrice).toFixed(0)} ج.م</Text>:null}
-   {item.updatedAt?<Text style={s.cardDate}>{formatDate(item.updatedAt)}</Text>:null}
   </View>
  </Pressable>;
 
@@ -115,7 +111,6 @@ export default function App(){
     <Pressable style={s.headerIcon} onPress={()=>setMenuOpen(true)}><Text style={s.headerIconText}>☰</Text></Pressable>
     <View style={s.headerCenter}>
      <Text style={s.headerTitle}>EgyMeds</Text>
-     <Text style={s.headerDate}>{new Date().toLocaleDateString("en-GB").replace(/\//g,"-")}</Text>
     </View>
     <Pressable style={s.headerIcon} onPress={()=>setQuery("")}><Text style={s.headerIconText}>↻</Text></Pressable>
    </View>
@@ -161,6 +156,7 @@ export default function App(){
    <Pressable onPress={()=>Linking.openURL("tel:"+PHONE)}>
     <Text style={s.call}>للتواصل والإعلان: {PHONE}</Text>
    </Pressable>
+   <Text style={s.author}>Dr Ahmed badr</Text>
   </View>
 
   <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}>
@@ -363,7 +359,6 @@ const s=StyleSheet.create({
  homeHeader:{height:112,backgroundColor:"#1976D2",paddingTop:18,paddingHorizontal:14,flexDirection:"row",alignItems:"center",justifyContent:"space-between",borderBottomWidth:1,borderBottomColor:"#0F64B5"},
  headerCenter:{alignItems:"center",justifyContent:"center",flex:1},
  headerTitle:{fontSize:28,fontWeight:"800",color:"#FFF",letterSpacing:.2},
- headerDate:{fontSize:18,fontWeight:"700",color:"#FFEF4F",marginTop:4},
  headerIcon:{width:48,height:48,alignItems:"center",justifyContent:"center"},
  headerIconText:{fontSize:31,color:"#FFF",fontWeight:"700"},
  searchShell:{marginHorizontal:16,marginTop:14,backgroundColor:"#FFF",borderWidth:2,borderColor:"#2A97D2",borderRadius:11,paddingHorizontal:13,paddingTop:7,paddingBottom:10,elevation:2},
@@ -381,11 +376,9 @@ const s=StyleSheet.create({
  cardNameAr:{marginTop:4,fontSize:16,color:"#161616",textAlign:"right",width:"100%"},
  cardIngredient:{marginTop:6,fontSize:14,fontWeight:"700",color:"#D43E34",textAlign:"left",width:"100%"},
  cardCompany:{marginTop:4,fontSize:13,color:"#2B7546",textAlign:"left",width:"100%"},
- cardUnits:{marginTop:3,fontSize:12,color:"#4A555C",textAlign:"left",width:"100%"},
- cardPriceCol:{width:100,alignItems:"flex-end",justifyContent:"center"},
- cardPrice:{fontSize:21,fontWeight:"900",color:"#D73531",textAlign:"right"},
+ cardPriceCol:{width:105,alignItems:"flex-start",justifyContent:"flex-start",paddingTop:0},
+ cardPrice:{fontSize:21,fontWeight:"900",color:"#D73531",textAlign:"left"},
  cardOldPrice:{fontSize:15,color:"#20262D",textDecorationLine:"line-through",marginTop:2},
- cardDate:{fontSize:12,color:"#1F2B31",marginTop:2},
  center:{flex:1,alignItems:"center",justifyContent:"center",padding:30},
  emptyHome:{flex:1,alignItems:"center",justifyContent:"center",paddingBottom:120},
  emptyIcon:{fontSize:58,color:"#6D879B",marginBottom:10},
@@ -395,7 +388,8 @@ const s=StyleSheet.create({
  err:{fontSize:18,fontWeight:"700",color:"#B22C27",marginBottom:8},
  retry:{marginTop:16,backgroundColor:"#1976D2",borderRadius:10,paddingVertical:11,paddingHorizontal:22},
  retryText:{color:"#FFF",fontWeight:"800"},
- bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#FFF",borderTopWidth:1,borderTopColor:"#DCE4E9",paddingVertical:9,alignItems:"center"},
+ bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#FFF",borderTopWidth:1,borderTopColor:"#DCE4E9",paddingVertical:7,alignItems:"center"},
+ author:{marginTop:2,color:"#4A555C",fontSize:12,fontWeight:"700"},
  call:{color:"#1976D2",fontWeight:"800"},
  menuButton:{position:"absolute",right:10,top:10,width:46,height:46,borderRadius:10},
  menuIcon:{fontSize:25,color:"#1976D2",fontWeight:"700"},
