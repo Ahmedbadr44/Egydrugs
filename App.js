@@ -37,7 +37,7 @@ export default function App(){
     route:r.uses_summary_en||r.route||"",
     productType:r.product_type||""
    })));
-  }catch(e){setError(e.message||"Unable to load drug database");}
+  }catch(e){setError(e.message||"تعذر تحميل قاعدة بيانات الأدوية");}
   finally{setLoading(false);}
  }
 
@@ -50,8 +50,8 @@ export default function App(){
  const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameRoute,sameStrength}):[],[medicines,selected,sameRoute,sameStrength]);
 
  const placeholder=scope==="ingredient"
-   ?"Search active ingredient in English"
-   :"Search brand name in Arabic or English";
+   ?"ابحث بالمادة الفعالة بالإنجليزية"
+   :"ابحث باسم الدواء بالعربي أو بالإنجليزية";
 
  const openDrug=item=>{
   setSameRoute(false);setSameStrength(false);setSelected(item);
@@ -61,6 +61,7 @@ export default function App(){
   <View style={s.main}>
    <Text style={s.en} numberOfLines={3}>{item.nameEn||"-"}</Text>
    
+   {item.nameAr?<Text style={s.ar} numberOfLines={2}>{item.nameAr}</Text>:null}
    {item.ingredient?<Text style={s.sc} numberOfLines={3}>{item.ingredient}</Text>:null}
    <Text style={s.co} numberOfLines={2}>{item.manufacturer||"-"}</Text>
   </View>
@@ -75,8 +76,8 @@ export default function App(){
  const selectDoseDrug=async item=>{
   setDoseSelected(item);setDoseInfo(null);setDoseError("");
   const key=ingredientKey(item.ingredient||"");
-  if(!key){setDoseError("Unable to identify the active ingredient for this product.");return;}
-  if(String(item.productType||"").toUpperCase()==="COSMETIC"){setDoseError("This product is a cosmetic and has no drug dose.");return;}
+  if(!key){setDoseError("تعذر تحديد المادة الفعالة لهذا المنتج.");return;}
+  if(String(item.productType||"").toUpperCase()==="COSMETIC"){setDoseError("هذا المنتج مستحضر تجميلي ولا توجد له جرعة دوائية.");return;}
   const isCombination=/[+;,\/]/.test(String(item.ingredient||""));
   setDoseLoading(true);
   const r=await supabase.from("dosage_reference")
@@ -84,8 +85,8 @@ export default function App(){
    .eq("ingredient_key",key)
    .eq("is_combination",isCombination)
    .maybeSingle();
-  if(r.error) setDoseError(r.error.message||"Unable to load dosing data.");
-  else if(!r.data) setDoseError("No dosing reference is currently available for this active ingredient.");
+  if(r.error) setDoseError(r.error.message||"تعذر تحميل بيانات الجرعات.");
+  else if(!r.data) setDoseError("لا توجد بيانات جرعات مرجعية متاحة حاليًا لهذه المادة الفعالة.");
   else setDoseInfo(r.data);
   setDoseLoading(false);
  };
@@ -151,12 +152,13 @@ export default function App(){
       <View style={s.detail}>
        <Text style={s.detailLabel}>Drug Name</Text>
        <Text style={s.detailEn}>{selected.nameEn||"-"}</Text>
-       <Info l="Active Ingredient" v={selected.ingredient}/>
-       <Info l="Manufacturer" v={selected.manufacturer}/>
-       <Info l="Drug Class" v={selected.drugClass}/>
-       <Info l="Dosage Form" v={route(selected.route)}/>
-       {selected.productType?<Info l="Product Type" v={productTypeLabel(selected.productType)}/>:null}
-       <Info l="Price" v={price(selected.price)}/>
+       {selected.nameAr?<Text style={s.detailAr}>{selected.nameAr}</Text>:null}
+       <Info l="المادة الفعالة" v={selected.ingredient}/>
+       <Info l="الشركة المصنعة" v={selected.manufacturer}/>
+       <Info l="التصنيف الدوائي" v={selected.drugClass}/>
+       <Info l="الشكل الدوائي" v={route(selected.route)}/>
+       {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
+       <Info l="السعر" v={price(selected.price)}/>
        <Pressable style={s.imageButton} onPress={openImageSearch}>
         <Text style={s.imageButtonText}>Drug Images</Text>
        </Pressable>
@@ -179,7 +181,7 @@ export default function App(){
         equivalents.map(item=><Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
          <View style={s.eqMain}>
           <Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
-          
+          {item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}
           <Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text>
          </View>
          <Text style={s.eqPrice}>{price(item.price)}</Text>
@@ -220,7 +222,7 @@ export default function App(){
        <View style={s.toolPage}>
         <Text style={s.toolTitle}>Drug Dosing Reference</Text>
         <Text style={s.toolHint}>Use the same search engine as the main search, then select a product to review dosing and clinical reference data.</Text>
-        <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"Search active ingredient in English":"Search brand name"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
+        <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"ابحث بالمادة الفعالة بالإنجليزية":"ابحث باسم الدواء"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
         <View style={s.chips}>
          <Pressable style={[s.chip,doseScope==="brand"&&s.sel]} onPress={()=>{setDoseScope("brand");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
           <Text style={doseScope==="brand"?s.selText:s.chipText}>Brand</Text>
@@ -245,17 +247,17 @@ export default function App(){
           <View style={s.doseSelectedCard}>
            <Text style={s.doseSelectedTitle}>{doseSelected.nameEn||"-"}</Text>
            
-           <Text style={s.doseSelectedIng}>Active ingredient: {doseSelected.ingredient||"-"}</Text>
+           <Text style={s.doseSelectedIng}>المادة الفعالة: {doseSelected.ingredient||"-"}</Text>
           </View>
           {doseLoading?<View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>Loading clinical reference data...</Text></View>:null}
           {doseError?<Text style={s.doseError}>{doseError}</Text>:null}
           {doseInfo&&!doseError ? (
            <View>
-            <DoseSection title="Adult Dose" text={doseInfo.adult_dose}/>
-            <DoseSection title="Pediatric Dose" text={doseInfo.pediatric_dose}/>
-            <DoseSection title="Pregnancy Safety" text={doseInfo.pregnancy_safety}/>
-            <DoseSection title="Lactation Safety" text={doseInfo.lactation_safety}/>
-            <DoseSection title="Common & Important Side Effects" text={doseInfo.side_effects}/>
+            <DoseSection title="جرعة البالغين" text={doseInfo.adult_dose}/>
+            <DoseSection title="جرعة الأطفال" text={doseInfo.pediatric_dose}/>
+            <DoseSection title="الأمان في الحمل" text={doseInfo.pregnancy_safety}/>
+            <DoseSection title="الأمان في الرضاعة" text={doseInfo.lactation_safety}/>
+            <DoseSection title="أهم وأشهر الأعراض الجانبية" text={doseInfo.side_effects}/>
             {(doseInfo.source_name||doseInfo.source_url)?<Text style={s.sourceLine}>Source: {doseInfo.source_name||doseInfo.source_url}</Text>:null}
             <Text style={s.disclaimer}>Reference information only. Not a substitute for clinical judgment or the approved product information.</Text>
            </View>
@@ -268,7 +270,7 @@ export default function App(){
      ) : (
       <View style={s.toolPage}>
        <Text style={s.toolTitle}>{toolScreen==="guide"?"Drug Guide":toolScreen==="prices"?"Price Updates":"Cosmetics Guide"}</Text>
-       <Text style={s.toolHint}>{toolScreen==="guide"?"Drug Guide is ready for the next implementation phase.":toolScreen==="prices"?"Price Updates is ready for the next implementation phase.":"Cosmetics Guide is ready for the next implementation phase."}</Text>
+       <Text style={s.toolHint}>{toolScreen==="guide"?"دليل الأدوية جاهز لمرحلة التنفيذ التالية.":toolScreen==="prices"?"تحديث الأسعار جاهز لمرحلة التنفيذ التالية.":"دليل مستحضرات التجميل جاهز لمرحلة التنفيذ التالية."}</Text>
       </View>
      )}
     </View>
@@ -305,7 +307,7 @@ function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text
 const s=StyleSheet.create({
  safe:{flex:1,backgroundColor:"#F7F9F8"}
 ,
- container:{flex:1,padding:16,direction:"ltr"},
+ container:{flex:1,padding:16,direction:"rtl"},
  title:{fontSize:22,fontWeight:"800",color:"#0B7468",textAlign:"center",paddingVertical:16},
  search:{direction:"ltr",backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:13,fontSize:16,marginBottom:10},
  chips:{flexDirection:"row",gap:8,marginBottom:10},
@@ -331,22 +333,22 @@ price:{fontSize:14,fontWeight:"800",color:"#0B7468",textAlign:"left",includeFont
  bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#FFF",borderTopWidth:1,borderTopColor:"#E1E7E5",padding:8,alignItems:"center"},
  call:{color:"#0B7468",fontWeight:"700"},
  back:{color:"#0B7468",fontWeight:"700",paddingVertical:12},
- detailScroll:{paddingBottom:110,direction:"ltr"},
-headerRow:{minHeight:56,position:"relative",justifyContent:"center",alignItems:"center",direction:"ltr"},
+ detailScroll:{paddingBottom:110,direction:"rtl"},
+headerRow:{minHeight:56,position:"relative",justifyContent:"center",alignItems:"center",direction:"rtl"},
 title:{fontSize:22,fontWeight:"800",color:"#0B7468",textAlign:"center"},
 menuButton:{position:"absolute",right:0,top:4,width:46,height:46,borderRadius:10,backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",alignItems:"center",justifyContent:"center"},
 menuIcon:{fontSize:25,color:"#0B7468",fontWeight:"700",lineHeight:28},
 menuOverlay:{flex:1,backgroundColor:"rgba(0,0,0,0.18)"},
-menuPanel:{position:"absolute",top:58,right:16,direction:"ltr",width:230,backgroundColor:"#FFF",borderWidth:1,borderColor:"#DDE5E2",borderRadius:12,padding:12,shadowColor:"#000",shadowOpacity:0.12,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:5},
-menuTitle:{fontSize:18,fontWeight:"800",color:"#172321",textAlign:"left",paddingVertical:8,paddingHorizontal:6},
+menuPanel:{position:"absolute",top:58,right:16,direction:"rtl",width:230,backgroundColor:"#FFF",borderWidth:1,borderColor:"#DDE5E2",borderRadius:12,padding:12,shadowColor:"#000",shadowOpacity:0.12,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:5},
+menuTitle:{fontSize:18,fontWeight:"800",color:"#172321",textAlign:"right",paddingVertical:8,paddingHorizontal:6},
 menuItem:{borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:14,paddingHorizontal:8},
-menuItemText:{fontSize:16,fontWeight:"700",color:"#0B7468",textAlign:"left"},
-toolPage:{flex:1,alignItems:"center",justifyContent:"center",padding:30,direction:"ltr",backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:12,marginTop:20},
+menuItemText:{fontSize:16,fontWeight:"700",color:"#0B7468",textAlign:"right"},
+toolPage:{flex:1,alignItems:"center",justifyContent:"center",padding:30,direction:"rtl",backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:12,marginTop:20},
 toolTitle:{fontSize:25,fontWeight:"800",color:"#0B7468",textAlign:"center"},
 toolHint:{fontSize:15,color:"#68736F",textAlign:"center",marginTop:12,lineHeight:22},
 imageButton:{marginTop:16,backgroundColor:"#0B7468",borderRadius:10,paddingVertical:12,paddingHorizontal:16,alignItems:"center"},
 imageButtonText:{color:"#FFF",fontSize:15,fontWeight:"800"},
-toolScroll:{paddingBottom:100,direction:"ltr"},
+toolScroll:{paddingBottom:100,direction:"rtl"},
 toolSearch:{direction:"ltr",width:"100%",backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFDD",borderRadius:10,padding:13,fontSize:16,marginTop:16,textAlign:"left"},
 doseResults:{direction:"ltr",width:"100%",marginTop:10},
 doseResult:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:9,padding:12,marginBottom:7},
@@ -377,9 +379,9 @@ browserTitle:{fontSize:17,fontWeight:"800",color:"#172321"},
 browserBack:{paddingVertical:8,paddingHorizontal:8},
 browserBackText:{color:"#0B7468",fontWeight:"700"},
 webview:{flex:1,backgroundColor:"#FFF"},
-detail:{direction:"ltr",backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
+detail:{direction:"rtl",backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:18},
 detailLabel:{fontSize:12,fontWeight:"700",color:"#7A8582",textAlign:"right",marginBottom:4},
-eqSection:{direction:"ltr",marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
+eqSection:{direction:"rtl",marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
 eqTitle:{fontSize:20,fontWeight:"800",color:"#0B7468",textAlign:"left"},
 eqHint:{fontSize:12,color:"#7A8582",textAlign:"left",marginTop:3},
 eqFilters:{flexDirection:"row-reverse",gap:8,marginTop:10,marginBottom:10},
@@ -397,7 +399,7 @@ eqPrice:{width:70,fontSize:13,fontWeight:"800",color:"#0B7468",textAlign:"right"
 
  detailEn:{fontSize:24,fontWeight:"800",color:"#0B7468",textAlign:"left"},
  detailAr:{fontSize:17,color:"#586460",marginTop:5,marginBottom:12,textAlign:"left"},
- info:{direction:"ltr",borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:12,flexDirection:"row-reverse"},
- label:{width:"36%",color:"#7A8582",textAlign:"left"},
- value:{width:"64%",color:"#172321",textAlign:"left"}
+ info:{direction:"rtl",borderTopWidth:1,borderTopColor:"#E7ECEB",paddingVertical:12,flexDirection:"row"},
+ label:{width:"36%",color:"#7A8582",textAlign:"right"},
+ value:{width:"64%",color:"#172321",textAlign:"right"}
 });
