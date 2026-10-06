@@ -3,7 +3,7 @@ import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaVi
 import{WebView}from"react-native-webview";
 import{supabase}from"./src/lib/supabase";
 import{useDrugSearch}from"./src/search/useDrugSearch";
-import{getEquivalents,ingredientKey}from"./src/equivalents";
+import{getEquivalents,ingredientKey,dosageFormOf}from"./src/equivalents";
 I18nManager.allowRTL(true);
 const PAGE_SIZE=1000,PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
@@ -189,7 +189,7 @@ export default function App(){
       <View style={s.eqSection}>
        <Text style={s.eqTitle}>البدائل المتاحة ({equivalents.length})</Text>
        <View style={s.eqFilters}>
-        {String(selected.route||"").trim()&&String(selected.route||"").toUpperCase()!=="UNKNOWN"?
+        {hasDosageForm(selected.nameEn)?
          <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
           <Text style={sameRoute?s.eqChipTextActive:s.eqChipText}>نفس الشكل الدوائي</Text>
          </Pressable>:null}
@@ -317,7 +317,7 @@ export default function App(){
  </SafeAreaView>;
 }
 
-function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
+function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}\nfunction hasDosageForm(name){return dosageFormOf(name)!=="unknown";}
 function DoseSection({title,text}){return <View style={s.doseSection}><Text style={s.doseSectionTitle}>{title}</Text><Text style={s.doseText}>{text||"Not available in the current reference database."}</Text></View>}
 function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
 
