@@ -549,3 +549,7 @@ Before changing anything:
 - Removed the remaining Arabic search placeholders from the main search UI while keeping Arabic input support for Brand search.
 - The displayed dosage and clinical reference data remain English-only.
 - Kept the same Supabase `public.dosage_reference` source and the existing high-quality search engine.
+## 37. 2026-10-06 — Synced React Native app with latest drug dataset
+- Updated the React Native app's Supabase query to load the new `description` and `uses_summary_en` fields from `public.drugs`.
+- The drug detail mapping now uses `description` as the displayed Drug Class value and `uses_summary_en` as the displayed Dosage Form value, with the previous fields kept as fallbacks.
+- This keeps the mobile app aligned with the latest database mapping for the 26,562-product dataset.
