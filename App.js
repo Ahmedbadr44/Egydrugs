@@ -320,7 +320,13 @@ export default function App(){
 function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
 function hasDosageForm(name){return dosageFormOf(name)!=="unknown";}
 function DoseSection({title,text}){return <View style={s.doseSection}><Text style={s.doseSectionTitle}>{title}</Text><Text style={s.doseText}>{text||"Not available in the current reference database."}</Text></View>}
-function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
+function Info({l,v}){
+ const displayValue=String(v||"-").replace(/([.+/()><,-])/g,"$1\\u200B");
+ return <View style={s.info}>
+  <Text style={s.label}>{l}</Text>
+  <Text style={s.value}>{displayValue}</Text>
+ </View>;
+}
 
 const s=StyleSheet.create({
  safe:{flex:1,backgroundColor:"#F7F5ED"},
@@ -389,8 +395,8 @@ const s=StyleSheet.create({
  infoCard:{backgroundColor:"#FFF",borderRadius:18,marginTop:14,overflow:"hidden",elevation:2},
  sectionTitle:{color:"#00695C",fontSize:22,fontWeight:"900",textAlign:"right",paddingHorizontal:18,paddingVertical:15},
  info:{borderTopWidth:1,borderTopColor:"#E5E9E6",paddingHorizontal:16,paddingVertical:14,flexDirection:"row",alignItems:"flex-start",justifyContent:"space-between",minHeight:58},
- label:{width:"38%",fontSize:15,color:"#6C7774",textAlign:"right",fontWeight:"700",lineHeight:21,textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
- value:{flex:1,marginLeft:14,fontSize:15,color:"#2F3E3A",textAlign:"left",lineHeight:21,textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
+ label:{width:"38%",fontSize:15,color:"#6C7774",textAlign:"right",fontWeight:"700",lineHeight:21,includeFontPadding:false,textBreakStrategy:"balanced",android_hyphenationFrequency:"none"},
+ value:{flex:1,marginLeft:14,fontSize:15,color:"#2F3E3A",textAlign:"left",lineHeight:21,includeFontPadding:false,flexShrink:1,textBreakStrategy:"balanced",android_hyphenationFrequency:"none"},
  eqSection:{backgroundColor:"#FFF",borderRadius:18,marginTop:14,padding:14,elevation:2},
  eqTitle:{fontSize:22,fontWeight:"900",color:"#00695C",textAlign:"right"},
  eqHint:{fontSize:12,color:"#7A8582",textAlign:"right",marginTop:3},
