@@ -160,9 +160,7 @@ export default function App(){
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
       <View style={s.heroCard}>
        <Pressable style={s.imageSearchHero} onPress={openImageSearch}>
-        <Text style={s.imageSearchHeroTitle}>Google صور</Text>
-        <Text style={s.imageSearchHeroText}>البحث عن صورة الدواء في Google صور</Text>
-        <Text style={s.imageSearchHeroHint}>اضغط لفتح نتائج الصور الخاصة بهذا الدواء</Text>
+        <Text style={s.imageSearchHeroTitle}>صورة الدواء</Text>
        </Pressable>
        <View style={s.heroRow}>
         <View style={s.heroNameBlock}>
@@ -360,11 +358,11 @@ const s=StyleSheet.create({
  call:{color:"#2E5A52",fontWeight:"800"},
  menuButton:{position:"absolute",right:10,top:10,width:46,height:46,borderRadius:10},
  menuIcon:{fontSize:25,color:"#1976D2",fontWeight:"700"},
- menuOverlay:{flex:1,backgroundColor:"rgba(0,0,0,.22)"},
- menuPanel:{position:"absolute",top:62,right:14,direction:"rtl",width:250,backgroundColor:"#FFF",borderWidth:1,borderColor:"#D5DFE5",borderRadius:12,padding:10,elevation:5},
- menuTitle:{fontSize:20,fontWeight:"900",color:"#1976D2",textAlign:"right",paddingVertical:8,paddingHorizontal:8},
- menuItem:{borderTopWidth:1,borderTopColor:"#E7EDF1",paddingVertical:14,paddingHorizontal:8},
- menuItemText:{fontSize:16,fontWeight:"800",color:"#1976D2",textAlign:"right"},
+ menuOverlay:{flex:1,backgroundColor:"rgba(0,0,0,.18)"},
+ menuPanel:{position:"absolute",top:76,left:12,width:245,backgroundColor:"#FFFDF8",borderWidth:1,borderColor:"#A8C9C2",borderRadius:14,padding:8,elevation:8,shadowColor:"#000",shadowOpacity:.16,shadowRadius:10,shadowOffset:{width:0,height:5}},
+ menuTitle:{fontSize:19,fontWeight:"900",color:"#00695C",textAlign:"right",paddingVertical:10,paddingHorizontal:10},
+ menuItem:{borderTopWidth:1,borderTopColor:"#E2E8E5",paddingVertical:15,paddingHorizontal:10},
+ menuItemText:{fontSize:16,fontWeight:"800",color:"#24574F",textAlign:"right"},
  detailScreen:{flex:1,backgroundColor:"#F7F5ED"},
  detailHeader:{height:72,backgroundColor:"#00695C",flexDirection:"row",alignItems:"center",justifyContent:"space-between",paddingHorizontal:12},
  detailHeaderIcon:{width:48,height:48,alignItems:"center",justifyContent:"center"},
@@ -374,11 +372,9 @@ const s=StyleSheet.create({
  heartActive:{color:"#FFF100"},
  detailScroll:{padding:12,paddingBottom:100},
  heroCard:{backgroundColor:"#FFF",borderRadius:18,padding:14,elevation:4,shadowColor:"#000",shadowOpacity:.1,shadowRadius:8,shadowOffset:{width:0,height:4}},
- imageSearchHero:{minHeight:150,alignItems:"center",justifyContent:"center",backgroundColor:"#E1F1EC",borderWidth:2,borderColor:"#56A79E",borderRadius:16,paddingHorizontal:18,paddingVertical:20},
+ imageSearchHero:{minHeight:190,alignItems:"center",justifyContent:"center",backgroundColor:"#F3F8F6",borderWidth:2,borderColor:"#79B9AE",borderRadius:16,paddingHorizontal:18,paddingVertical:20},
  imageSearchHeroTitle:{fontSize:28,fontWeight:"900",color:"#06463F"},
- imageSearchHeroText:{fontSize:18,fontWeight:"800",color:"#00695C",marginTop:10,textAlign:"center"},
- imageSearchHeroHint:{fontSize:13,color:"#6E7C76",marginTop:7,textAlign:"center"},
- heroRow:{flexDirection:"row-reverse",alignItems:"flex-start",justifyContent:"space-between",marginTop:14,gap:8},
+  heroRow:{flexDirection:"row-reverse",alignItems:"flex-start",justifyContent:"space-between",marginTop:14,gap:8},
  heroNameBlock:{flex:1,alignItems:"flex-start"},
  heroNameEn:{fontSize:25,fontWeight:"900",color:"#2473AF",textAlign:"left"},
  heroNameAr:{fontSize:18,color:"#1B1B1B",marginTop:4,textAlign:"right"},
@@ -388,9 +384,9 @@ const s=StyleSheet.create({
  heroOldPrice:{fontSize:16,color:"#D16B68",textDecorationLine:"line-through",marginTop:2},
  infoCard:{backgroundColor:"#FFF",borderRadius:18,marginTop:14,overflow:"hidden",elevation:2},
  sectionTitle:{color:"#00695C",fontSize:22,fontWeight:"900",textAlign:"right",paddingHorizontal:18,paddingVertical:15},
- info:{borderTopWidth:1,borderTopColor:"#EEF2F4",paddingHorizontal:16,paddingVertical:12,flexDirection:"row",alignItems:"flex-start"},
- label:{width:"37%",fontSize:16,color:"#70787F",textAlign:"right",fontWeight:"600"},
- value:{width:"63%",fontSize:15,color:"#3F4A52",textAlign:"left",lineHeight:21},
+ info:{borderTopWidth:1,borderTopColor:"#E5E9E6",paddingHorizontal:16,paddingVertical:14,flexDirection:"row",alignItems:"flex-start",justifyContent:"space-between",minHeight:58},
+ label:{width:"36%",fontSize:15,color:"#6C7774",textAlign:"right",fontWeight:"700",lineHeight:21},
+ value:{flex:1,marginLeft:14,fontSize:15,color:"#2F3E3A",textAlign:"left",lineHeight:21},
  eqSection:{backgroundColor:"#FFF",borderRadius:18,marginTop:14,padding:14,elevation:2},
  eqTitle:{fontSize:22,fontWeight:"900",color:"#00695C",textAlign:"right"},
  eqHint:{fontSize:12,color:"#7A8582",textAlign:"right",marginTop:3},
