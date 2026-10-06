@@ -180,7 +180,6 @@ export default function App(){
        <Info l="Active Ingredient" v={selected.ingredient}/>
        <Info l="Manufacturer" v={selected.manufacturer}/>
        <Info l="Description" v={selected.drugClass}/>
-       <Info l="Uses" v={selected.route}/>
        {selected.productType?<Info l="Product Type" v={String(selected.productType).toUpperCase()}/>:null}
        <Info l="Price" v={price(selected.price)}/>
        {selected.updatedAt?<Info l="Last Price Update" v={new Date(selected.updatedAt).toLocaleDateString("en-GB")}/>:null}
