@@ -240,13 +240,17 @@ export default function App(){
         <Text style={s.toolTitle}>حساب الجرعات</Text>
         <Text style={s.toolHint}>استخدم نفس محرك البحث الرئيسي، ثم اختر دواءً لعرض الجرعات والمعلومات الطبية المرجعية.</Text>
         <TextInput value={doseQuery} onChangeText={v=>{setDoseQuery(v);setDoseSelected(null);setDoseInfo(null);setDoseError("");}} placeholder={doseScope==="ingredient"?"ابحث بالمادة الفعالة بالإنجليزية":"ابحث باسم الدواء"} placeholderTextColor="#7B8784" style={s.toolSearch} autoCorrect={false} autoCapitalize="none"/>
-        <View style={s.chips}>
-         <Pressable style={[s.chip,doseScope==="brand"&&s.sel]} onPress={()=>{setDoseScope("brand");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
-          <Text style={doseScope==="brand"?s.selText:s.chipText}>الدواء</Text>
+        <Text style={s.doseModeLabel}>البحث عن الجرعة باستخدام:</Text>
+        <View style={s.doseModeRow}>
+         <Pressable style={[s.doseModeButton,doseScope==="brand"&&s.doseModeButtonActive]} onPress={()=>{setDoseScope("brand");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
+          <Text style={doseScope==="brand"?s.doseModeTextActive:s.doseModeText}>اسم الدواء</Text>
          </Pressable>
-         <Pressable style={[s.chip,doseScope==="ingredient"&&s.sel]} onPress={()=>{setDoseScope("ingredient");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
-          <Text style={doseScope==="ingredient"?s.selText:s.chipText}>المادة الفعالة</Text>
+         <Pressable style={[s.doseModeButton,doseScope==="ingredient"&&s.doseModeButtonActive]} onPress={()=>{setDoseScope("ingredient");setDoseQuery("");setDoseSelected(null);setDoseInfo(null);setDoseError("");}}>
+          <Text style={doseScope==="ingredient"?s.doseModeTextActive:s.doseModeText}>المادة الفعالة</Text>
          </Pressable>
+        </View>
+        <View style={s.doseCurrentMode}>
+         <Text style={s.doseCurrentModeText}>وضع البحث الحالي: {doseScope==="brand"?"اسم الدواء":"المادة الفعالة"}</Text>
         </View>
         {doseSearch.notice==="ingredient-english-only" ? <Text style={s.doseError}>البحث بالمادة الفعالة متاح باللغة الإنجليزية فقط.</Text> : null}
         {doseQuery.trim().length>1&&!doseSelected ? (
@@ -262,9 +266,9 @@ export default function App(){
         {doseSelected ? (
          <View style={s.dosePanel}>
           <View style={s.doseSelectedCard}>
-           <Text style={s.doseSelectedTitle}>{doseSelected.nameEn||"-"}</Text>
-           
-           <Text style={s.doseSelectedIng}>المادة الفعالة: {doseSelected.ingredient||"-"}</Text>
+           <Text style={s.doseSelectedTitle}>{doseScope==="ingredient"?(doseSelected.ingredient||"-"):(doseSelected.nameEn||"-")}</Text>
+           {doseScope==="ingredient"?<Text style={s.doseSelectedIng}>الدواء المرتبط: {doseSelected.nameEn||"-"}</Text>:<Text style={s.doseSelectedIng}>المادة الفعالة: {doseSelected.ingredient||"-"}</Text>}
+           <Text style={s.doseSelectedMode}>طريقة البحث: {doseScope==="brand"?"اسم الدواء":"المادة الفعالة"}</Text>
           </View>
           {doseLoading?<View style={s.medicalLoading}><ActivityIndicator/><Text style={s.status}>جاري تحميل المعلومات الطبية المرجعية...</Text></View>:null}
           {doseError?<Text style={s.doseError}>{doseError}</Text>:null}
@@ -408,6 +412,14 @@ const s=StyleSheet.create({
  toolTitle:{fontSize:25,fontWeight:"800",color:"#00695C",textAlign:"center"},
  toolHint:{fontSize:15,color:"#68736F",textAlign:"center",marginTop:12,lineHeight:22},
  toolSearch:{width:"100%",backgroundColor:"#FFFDF8",borderWidth:1,borderColor:"#B9CFC8",borderRadius:10,padding:13,fontSize:16,marginTop:16,textAlign:"right"},
+ doseModeLabel:{width:"100%",marginTop:14,fontSize:14,fontWeight:"800",color:"#4A625D",textAlign:"right"},
+ doseModeRow:{width:"100%",flexDirection:"row-reverse",gap:8,marginTop:8},
+ doseModeButton:{flex:1,minHeight:46,alignItems:"center",justifyContent:"center",borderWidth:1.5,borderColor:"#B9CFC8",borderRadius:12,backgroundColor:"#FFF",paddingHorizontal:10},
+ doseModeButtonActive:{backgroundColor:"#00695C",borderColor:"#00695C"},
+ doseModeText:{fontSize:15,fontWeight:"700",color:"#5E6D68"},
+ doseModeTextActive:{fontSize:15,fontWeight:"900",color:"#FFF"},
+ doseCurrentMode:{width:"100%",marginTop:8,paddingVertical:7,paddingHorizontal:10,borderRadius:8,backgroundColor:"#E1F1EC"},
+ doseCurrentModeText:{fontSize:12,fontWeight:"700",color:"#00695C",textAlign:"right"},
  doseResults:{width:"100%",marginTop:10},
  doseResult:{backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:9,padding:12,marginBottom:7},
  doseResultEn:{fontSize:15,fontWeight:"700",color:"#172321",textAlign:"left"},
@@ -417,6 +429,7 @@ const s=StyleSheet.create({
  doseSelectedCard:{backgroundColor:"#E1F1EC",borderWidth:1,borderColor:"#56A79E",borderRadius:10,padding:14},
  doseSelectedTitle:{fontSize:17,fontWeight:"800",color:"#00695C",textAlign:"left"},
  doseSelectedIng:{fontSize:12,color:"#68736F",marginTop:4,textAlign:"left"},
+ doseSelectedMode:{fontSize:11,color:"#00695C",fontWeight:"800",marginTop:6,textAlign:"right"},
  doseSection:{marginTop:14,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:10,padding:14},
  doseSectionTitle:{fontSize:19,fontWeight:"800",color:"#00695C",textAlign:"right",marginBottom:8},
  doseText:{fontSize:14,color:"#172321",textAlign:"left",marginTop:6,lineHeight:22},
