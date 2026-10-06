@@ -196,6 +196,9 @@ export default function App(){
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("guide");}}>
       <Text style={s.menuItemText}>دليل الأدوية</Text>
      </Pressable>
+     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("supplements");}}>
+      <Text style={s.menuItemText}>دليل المكملات الغذائية</Text>
+     </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("cosmetics");}}>
       <Text style={s.menuItemText}>دليل مستحضرات التجميل</Text>
      </Pressable>
@@ -211,8 +214,8 @@ export default function App(){
     <View style={s.container}>
      <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>رجوع</Text></Pressable>
            <View style={s.toolPage}>
-       <Text style={s.toolTitle}>{toolScreen==="guide"?"Drug Guide":toolScreen==="prices"?"Price Updates":"Cosmetics Guide"}</Text>
-       <Text style={s.toolHint}>{toolScreen==="guide"?"دليل الأدوية جاهز لمرحلة التنفيذ التالية.":toolScreen==="prices"?"تحديث الأسعار جاهز لمرحلة التنفيذ التالية.":"دليل مستحضرات التجميل جاهز لمرحلة التنفيذ التالية."}</Text>
+       <Text style={s.toolTitle}>{toolScreen==="guide"?"Drug Guide":toolScreen==="supplements"?"دليل المكملات الغذائية":toolScreen==="prices"?"Price Updates":"Cosmetics Guide"}</Text>
+       <Text style={s.toolHint}>{toolScreen==="guide"?"دليل الأدوية جاهز لمرحلة التنفيذ التالية.":toolScreen==="supplements"?"دليل المكملات الغذائية جاهز لمرحلة التنفيذ التالية.":toolScreen==="prices"?"تحديث الأسعار جاهز لمرحلة التنفيذ التالية.":"دليل مستحضرات التجميل جاهز لمرحلة التنفيذ التالية."}</Text>
       </View>
     </View>
    </SafeAreaView>
