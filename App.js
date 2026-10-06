@@ -375,7 +375,7 @@ const s=StyleSheet.create({
  list:{paddingHorizontal:12,paddingTop:12,paddingBottom:115},
  card:{backgroundColor:"#FBFAF3",borderRadius:10,borderWidth:1,borderColor:"#ECE8DA",paddingVertical:11,paddingHorizontal:12,marginBottom:9,flexDirection:"row-reverse",elevation:1},
  cardMain:{flex:1,minWidth:0,paddingLeft:9,alignItems:"flex-start"},
- cardNameEn:{fontSize:18,fontWeight:"800",color:"#0B514B",textAlign:"left",width:"100%"},
+ cardNameEn:{fontSize:18,fontWeight:"800",color:"#06463F",textAlign:"left",width:"100%"},
  cardNameAr:{marginTop:4,fontSize:16,color:"#536D65",textAlign:"right",width:"100%"},
  cardIngredient:{marginTop:6,fontSize:14,fontWeight:"700",color:"#187168",textAlign:"left",width:"100%"},
  cardCompany:{marginTop:4,fontSize:13,color:"#7A857E",textAlign:"left",width:"100%"},
