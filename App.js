@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useState} from "react";
-import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View,Image}from"react-native";
+import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
 import{WebView}from"react-native-webview";
 import{supabase}from"./src/lib/supabase";
 import{useDrugSearch}from"./src/search/useDrugSearch";
@@ -10,7 +10,7 @@ const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2)
 const route=v=>({"ORAL.SOLID":"Tablets / Capsules","ORAL.LIQUID":"Oral Liquid","INJECTION":"Injection",TOPICAL:"Topical",EFF:"Effervescent",SPRAY:"Spray",EYE:"Ophthalmic",VAGINAL:"Vaginal",MOUTH:"Oral",RECTAL:"Rectal",SOAP:"Soap",EAR:"Otic"}[String(v||"").toUpperCase()]||v||"Unknown");
 
 export default function App(){
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[detailMedical,setDetailMedical]=useState(null),[detailLoading,setDetailLoading]=useState(false),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
  const[doseQuery,setDoseQuery]=useState(""),[doseScope,setDoseScope]=useState("brand"),[doseSelected,setDoseSelected]=useState(null),[doseInfo,setDoseInfo]=useState(null),[doseLoading,setDoseLoading]=useState(false),[doseError,setDoseError]=useState("");
 
  async function loadDrugs(){
@@ -55,19 +55,8 @@ export default function App(){
    ?"ابحث بالمادة الفعالة بالإنجليزية"
    :"ابحث باسم الدواء بالعربي أو بالإنجليزية";
 
- const openDrug=async item=>{
-  setSameRoute(false);setSameStrength(false);setFavorite(false);setSelected(item);setDetailMedical(null);setDetailLoading(true);
-  try{
-   const key=ingredientKey(item.ingredient||"");
-   const [mi,ai]=await Promise.all([
-    supabase.from("drug_medical_info").select("image_url,image_source_url,image_source_name,uses,dosages,side_effects,contraindications,warnings,source_url,source_name").eq("drug_id",item.id).maybeSingle(),
-    key
-      ? supabase.from("active_ingredient_medical_info").select("medical_uses,cosmetic_uses,dosage,side_effects,contraindications,source_url,source_name,display_name").eq("ingredient_key",key).maybeSingle()
-      : Promise.resolve({data:null,error:null})
-   ]);
-   setDetailMedical({product:mi.data||null,ingredient:ai.data||null});
-  }catch(e){setDetailMedical(null);}
-  finally{setDetailLoading(false);}
+ const openDrug=item=>{
+  setSameRoute(false);setSameStrength(false);setFavorite(false);setSelected(item);
 };
  const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.nameAr,selected.manufacturer,selected.ingredient].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
@@ -170,13 +159,10 @@ export default function App(){
 
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
       <View style={s.heroCard}>
-       <View style={s.imageFrame}>
-        {detailMedical?.product?.image_url
-          ? <Image source={{uri:detailMedical.product.image_url}} style={s.productImage} resizeMode="contain"/>
-          : <Pressable style={s.imagePlaceholder} onPress={openImageSearch}><Text style={s.imagePlaceholderIcon}>💊</Text><Text style={s.imagePlaceholderText}>اضغط للبحث عن صورة الدواء في Google صور</Text></Pressable>}
-       </View>
-       <Pressable style={s.imageSearchButton} onPress={openImageSearch}>
-        <Text style={s.imageSearchButtonText}>البحث عن صورة الدواء في Google صور</Text>
+       <Pressable style={s.imageSearchHero} onPress={openImageSearch}>
+        <Text style={s.imageSearchHeroTitle}>Google صور</Text>
+        <Text style={s.imageSearchHeroText}>البحث عن صورة الدواء في Google صور</Text>
+        <Text style={s.imageSearchHeroHint}>اضغط لفتح نتائج الصور الخاصة بهذا الدواء</Text>
        </Pressable>
        <View style={s.heroRow}>
         <View style={s.heroNameBlock}>
@@ -189,32 +175,19 @@ export default function App(){
          {selected.oldPrice!=null?<Text style={s.heroOldPrice}>{Number(selected.oldPrice).toFixed(0)} ج.م</Text>:null}
         </View>
        </View>
-       <Pressable style={s.orderButton} onPress={()=>Linking.openURL("tel:"+PHONE)}><Text style={s.orderButtonIcon}>🛍</Text><Text style={s.orderButtonText}>لطلب شراء الدواء اضغط هنا</Text></Pressable>
       </View>
 
       <View style={s.infoCard}>
-       <Text style={s.sectionTitle}>معلومات الدواء</Text>
-       <Info l="المادة الفعالة" v={selected.ingredient}/>
-       <Info l="الشركة" v={selected.manufacturer}/>
-       <Info l="التصنيف" v={selected.drugClass}/>
-       <Info l="شكل الجرعة" v={selected.route}/>
-       {selected.productType?<Info l="نوع المنتج" v={productTypeLabel(selected.productType)}/>:null}
-       <Info l="السعر" v={price(selected.price).replace(" EGP"," ج.م")}/>
-       {selected.updatedAt?<Info l="آخر تحديث للسعر" v={new Date(selected.updatedAt).toLocaleDateString("ar-EG")}/>:null}
+       <Text style={s.sectionTitle}>Drug Information</Text>
+       <Info l="Active Ingredient" v={selected.ingredient}/>
+       <Info l="Manufacturer" v={selected.manufacturer}/>
+       <Info l="Description" v={selected.drugClass}/>
+       <Info l="Uses" v={selected.route}/>
+       {selected.productType?<Info l="Product Type" v={String(selected.productType).toUpperCase()}/>:null}
+       <Info l="Price" v={price(selected.price)}/>
+       {selected.updatedAt?<Info l="Last Price Update" v={new Date(selected.updatedAt).toLocaleDateString("en-GB")}/>:null}
       </View>
 
-      <View style={s.infoCard}>
-       <Text style={s.sectionTitle}>الخصائص الدوائية</Text>
-       {detailLoading?<View style={s.medicalLoading}><ActivityIndicator color="#1774C8"/><Text style={s.status}>جاري تحميل المعلومات الطبية...</Text></View>:null}
-       {!detailLoading&&detailMedical?.ingredient?.display_name?<Text style={s.medicalLead}>{detailMedical.ingredient.display_name}</Text>:null}
-       {!detailLoading&&detailMedical?.ingredient?.medical_uses?.length?<MedicalList title="الاستخدامات الطبية" items={detailMedical.ingredient.medical_uses}/>:null}
-       {!detailLoading&&detailMedical?.ingredient?.cosmetic_uses?.length&&String(selected.productType).toUpperCase()==="COSMETIC"?<MedicalList title="الاستخدامات التجميلية" items={detailMedical.ingredient.cosmetic_uses}/>:null}
-       {!detailLoading&&detailMedical?.ingredient?.dosage?.length?<MedicalList title="الجرعات" items={detailMedical.ingredient.dosage}/>:null}
-       {!detailLoading&&detailMedical?.ingredient?.side_effects?.length?<MedicalList title="الأعراض الجانبية" items={detailMedical.ingredient.side_effects}/>:null}
-       {!detailLoading&&detailMedical?.ingredient?.contraindications?.length?<MedicalList title="موانع الاستخدام" items={detailMedical.ingredient.contraindications}/>:null}
-       {!detailLoading&&detailMedical?.product?.warnings?.length?<MedicalList title="التحذيرات" items={detailMedical.product.warnings}/>:null}
-       {!detailLoading&&!detailMedical?.ingredient&&!detailMedical?.product?<Text style={s.medicalFallback}>لا توجد معلومات طبية إضافية متاحة حاليًا.</Text>:null}
-      </View>
 
       <View style={s.eqSection}>
        <Text style={s.eqTitle}>البدائل المتاحة ({equivalents.length})</Text>
@@ -343,18 +316,9 @@ export default function App(){
  </SafeAreaView>;
 }
 
-function productTypeLabel(v){
- const k=String(v||"").toUpperCase();
- return ({MEDICINE:"دواء",COSMETIC:"مستحضر تجميلي",SUPPLEMENT:"مكمل غذائي",MEDICAL_DEVICE:"جهاز طبي",OTHER:"أخرى"}[k]||v||"Unknown");
-}
 function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
 function DoseSection({title,text}){return <View style={s.doseSection}><Text style={s.doseSectionTitle}>{title}</Text><Text style={s.doseText}>{text||"Not available in the current reference database."}</Text></View>}
 function Info({l,v}){return <View style={s.info}><Text style={s.label}>{l}</Text><Text style={s.value}>{v||"-"}</Text></View>}
-
-function MedicalList({title,items}){
- const arr=Array.isArray(items)?items:[items];
- return <View style={s.medicalSub}><Text style={s.medicalSubTitle}>{title}</Text>{arr.filter(Boolean).map((x,i)=><Text key={i} style={s.medicalText}>• {typeof x==="string"?x:JSON.stringify(x)}</Text>)}</View>;
-}
 
 const s=StyleSheet.create({
  safe:{flex:1,backgroundColor:"#F7F5ED"},
@@ -410,13 +374,10 @@ const s=StyleSheet.create({
  heartActive:{color:"#FFF100"},
  detailScroll:{padding:12,paddingBottom:100},
  heroCard:{backgroundColor:"#FFF",borderRadius:18,padding:14,elevation:4,shadowColor:"#000",shadowOpacity:.1,shadowRadius:8,shadowOffset:{width:0,height:4}},
- imageFrame:{height:235,alignItems:"center",justifyContent:"center",backgroundColor:"#FFF",borderRadius:12,overflow:"hidden"},
- productImage:{width:"82%",height:"100%"},
- imagePlaceholder:{alignItems:"center",justifyContent:"center",width:"100%",height:"100%",backgroundColor:"#FAFCFD"},
- imagePlaceholderIcon:{fontSize:62,opacity:.45},
- imagePlaceholderText:{fontSize:14,color:"#6E7C76",marginTop:7,textAlign:"center",paddingHorizontal:14},
- imageSearchButton:{marginTop:10,borderWidth:1,borderColor:"#56A79E",borderRadius:12,paddingVertical:10,alignItems:"center",backgroundColor:"#E1F1EC"},
- imageSearchButtonText:{color:"#00695C",fontSize:14,fontWeight:"800"},
+ imageSearchHero:{minHeight:150,alignItems:"center",justifyContent:"center",backgroundColor:"#E1F1EC",borderWidth:2,borderColor:"#56A79E",borderRadius:16,paddingHorizontal:18,paddingVertical:20},
+ imageSearchHeroTitle:{fontSize:28,fontWeight:"900",color:"#06463F"},
+ imageSearchHeroText:{fontSize:18,fontWeight:"800",color:"#00695C",marginTop:10,textAlign:"center"},
+ imageSearchHeroHint:{fontSize:13,color:"#6E7C76",marginTop:7,textAlign:"center"},
  heroRow:{flexDirection:"row-reverse",alignItems:"flex-start",justifyContent:"space-between",marginTop:14,gap:8},
  heroNameBlock:{flex:1,alignItems:"flex-start"},
  heroNameEn:{fontSize:25,fontWeight:"900",color:"#2473AF",textAlign:"left"},
@@ -425,20 +386,11 @@ const s=StyleSheet.create({
  currentPriceLabel:{fontSize:15,color:"#6B757D",textAlign:"right"},
  currentPrice:{fontSize:28,fontWeight:"900",color:"#2A8E48",textAlign:"right"},
  heroOldPrice:{fontSize:16,color:"#D16B68",textDecorationLine:"line-through",marginTop:2},
- orderButton:{marginTop:13,backgroundColor:"#43A047",borderRadius:18,minHeight:58,flexDirection:"row-reverse",alignItems:"center",justifyContent:"center",gap:10,elevation:3},
- orderButtonIcon:{fontSize:22,color:"#FFF"},
- orderButtonText:{color:"#FFF",fontSize:19,fontWeight:"900"},
  infoCard:{backgroundColor:"#FFF",borderRadius:18,marginTop:14,overflow:"hidden",elevation:2},
  sectionTitle:{color:"#00695C",fontSize:22,fontWeight:"900",textAlign:"right",paddingHorizontal:18,paddingVertical:15},
  info:{borderTopWidth:1,borderTopColor:"#EEF2F4",paddingHorizontal:16,paddingVertical:12,flexDirection:"row",alignItems:"flex-start"},
  label:{width:"37%",fontSize:16,color:"#70787F",textAlign:"right",fontWeight:"600"},
  value:{width:"63%",fontSize:15,color:"#3F4A52",textAlign:"left",lineHeight:21},
- medicalLoading:{padding:18,alignItems:"center"},
- medicalLead:{fontSize:17,fontWeight:"700",color:"#3E4850",paddingHorizontal:18,paddingBottom:14,textAlign:"left"},
- medicalSub:{paddingHorizontal:18,paddingBottom:16,borderTopWidth:1,borderTopColor:"#EEF2F4",paddingTop:12},
- medicalSubTitle:{fontSize:18,fontWeight:"800",color:"#187168",textAlign:"right",marginBottom:7},
- medicalText:{fontSize:15,color:"#5D666D",lineHeight:26,textAlign:"left",marginTop:4},
- medicalFallback:{paddingHorizontal:18,paddingBottom:18,color:"#7E8A92",fontSize:15,textAlign:"right"},
  eqSection:{backgroundColor:"#FFF",borderRadius:18,marginTop:14,padding:14,elevation:2},
  eqTitle:{fontSize:22,fontWeight:"900",color:"#00695C",textAlign:"right"},
  eqHint:{fontSize:12,color:"#7A8582",textAlign:"right",marginTop:3},
