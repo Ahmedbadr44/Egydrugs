@@ -19,7 +19,7 @@ export default function App(){
    const rows=[];
    for(let from=0;;from+=PAGE_SIZE){
     const r=await supabase.from("drugs")
-      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,price_egp,product_type")
+      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,description,uses_summary_en,price_egp,product_type")
       .order("id",{ascending:true})
       .range(from,from+PAGE_SIZE-1);
     if(r.error)throw r.error;
@@ -33,8 +33,8 @@ export default function App(){
     price:r.price_egp,
     ingredient:r.scientific_name||"",
     manufacturer:r.manufacturer||"",
-    drugClass:r.drug_class||"",
-    route:r.route||"",
+    drugClass:r.description||r.drug_class||"",
+    route:r.uses_summary_en||r.route||"",
     productType:r.product_type||""
    })));
   }catch(e){setError(e.message||"Unable to load drug database");}
