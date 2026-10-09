@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-export const DATABASE_NAME = "egymeds-cache.db";
+export const DATABASE_NAME = "egymeds-cache-v2.db";
 const PAGE_SIZE = 1000;
 const FULL_RECONCILE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const SYNC_OVERLAP_MS = 30 * 1000;
