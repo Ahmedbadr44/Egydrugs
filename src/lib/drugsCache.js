@@ -176,7 +176,7 @@ async function saveRemoteRows(db, rows, { replaceAll, syncStartedAt }) {
   });
 }
 
-export async function syncDrugs() {
+export async function syncDrugs(onProgress) {
   const db = await getDatabase();
   const [countRow, lastSyncAt, lastFullSyncAt] = await Promise.all([
     db.getFirstAsync("SELECT COUNT(*) AS count FROM drugs_cache"),
@@ -202,9 +202,56 @@ export async function syncDrugs() {
     ).toISOString();
   }
 
+  // On the first full download (or if it was interrupted), save each page
+  // before downloading the next one. This keeps partial progress on-device.
+  // Weekly reconciliation still uses an all-at-once replacement so an
+  // interrupted refresh cannot wipe the existing working cache.
+  const bootstrapSync = fullSync && !lastFullSyncAt;
+  if (bootstrapSync) {
+    const accumulatedRows = [];
+
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error } = await supabase
+        .from("drugs")
+        .select(REMOTE_COLUMNS)
+        .order("id", { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (error) throw error;
+
+      const page = data || [];
+      if (page.length === 0) break;
+
+      await saveRemoteRows(db, page, {
+        replaceAll: false,
+        syncStartedAt,
+      });
+
+      accumulatedRows.push(...page);
+      onProgress?.({
+        drugs: accumulatedRows.map(toMedicine),
+        loaded: accumulatedRows.length,
+        complete: false,
+      });
+
+      if (page.length < PAGE_SIZE) break;
+    }
+
+    await setMeta(db, "last_sync_at", syncStartedAt);
+    await setMeta(db, "last_full_sync_at", syncStartedAt);
+
+    const drugs = await readCachedDrugsWithDb(db);
+    onProgress?.({ drugs, loaded: drugs.length, complete: true });
+    return { drugs, syncedRows: drugs.length, fullSync: true };
+  }
+
   const rows = await fetchRemoteRows({ fullSync, since });
-  await saveRemoteRows(db, rows, { replaceAll: fullSync, syncStartedAt });
+  await saveRemoteRows(db, rows, {
+    replaceAll: fullSync,
+    syncStartedAt,
+  });
   const drugs = await readCachedDrugsWithDb(db);
+  onProgress?.({ drugs, loaded: rows.length, complete: true });
 
   return {
     drugs,
