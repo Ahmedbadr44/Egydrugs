@@ -569,3 +569,13 @@ Before changing anything:
 - Removed exact duplicates `drug_class` (same as `description`), `route` and `uses_summary_en` (same values as `use`).
 - Removed dosage storage from the core product and medical-information tables, and dropped `dosage_reference`. Non-dosage medical metadata tables are retained for now; the React Native core screen does not query them.
 - `price_updated_at` is set only on inserts with a price and actual price changes. Existing records have no reliable price-specific history because earlier row updates refreshed `updated_at`; their `price_updated_at` therefore remains null until the next confirmed price change.
+
+
+## 2026-10-10 — Supabase-only minimal database
+
+- The React Native application reads only `public.drugs`; direct maintenance is done with Supabase Dashboard > Table Editor.
+- Removed the unused dosage reference, medical side tables, admin allowlist, data-version table/triggers, old source archive, and admin/medical helper RPCs.
+- Removed duplicate and unused columns from `public.drugs`: `drug_class`, `route`, `uses_summary_en`, `dosage`, `updated_at`, `price_source`, `source_record_id`, and `source_name`. The canonical fields are names, `scientific_name`, `manufacturer`, `description`, `use`, current/old price, `price_updated_at`, and `product_type`.
+- Public client roles are read-only for `drugs`; edits should be made by the project owner in Supabase Dashboard.
+- `price_updated_at` is updated only when a price changes. Existing rows remain NULL until future price changes because historic price-specific dates cannot be reliably inferred.
+- Legacy SQL import chunks are now guarded from truncating the production database because their column list belongs to the retired schema.
