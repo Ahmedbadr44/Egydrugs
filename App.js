@@ -1,11 +1,11 @@
 import React,{useEffect,useMemo,useState} from "react";
 import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
 import{WebView}from"react-native-webview";
-import{supabase}from"./src/lib/supabase";
+import { getCachedDrugs, syncDrugs } from "./src/lib/drugsCache";
 import{useDrugSearch}from"./src/search/useDrugSearch";
 import{getEquivalents,dosageFormOf}from"./src/equivalents";
 I18nManager.allowRTL(true);
-const PAGE_SIZE=1000,PHONE="01030950177";
+const PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
 
 
@@ -13,33 +13,30 @@ export default function App(){
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
 
  async function loadDrugs(){
-  setLoading(true);setError("");
-  try{
-   const rows=[];
-   for(let from=0;;from+=PAGE_SIZE){
-    const r=await supabase.from("drugs")
-      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,use,description,price_egp,price_old_egp,price_updated_at,product_type")
-      .order("id",{ascending:true})
-      .range(from,from+PAGE_SIZE-1);
-    if(r.error)throw r.error;
-    rows.push(...(r.data||[]));
-    if(!r.data||r.data.length<PAGE_SIZE)break;
+  setError("");
+  let cached = [];
+  try {
+   cached = await getCachedDrugs();
+
+   // Show the saved database immediately; refresh runs in the background.
+   if (cached.length > 0) {
+    setMedicines(cached);
+    setLoading(false);
+   } else {
+    setLoading(true);
    }
-   setMedicines(rows.map(r=>({
-    id:r.id,
-    nameEn:r.commercial_name_en||"",
-    nameAr:r.commercial_name_ar||"",
-    price:r.price_egp,
-    ingredient:r.scientific_name||"",
-    manufacturer:r.manufacturer||"",
-    description:r.description||"",
-    use:r.use||"",
-    productType:r.product_type||"",
-    oldPrice:r.price_old_egp,
-    priceUpdatedAt:r.price_updated_at,
-   })));
-  }catch(e){setError(e.message||"تعذر تحميل قاعدة بيانات الأدوية");}
-  finally{setLoading(false);}
+
+   const result = await syncDrugs();
+   setMedicines(result.drugs);
+   setError("");
+  } catch (e) {
+   // Keep working offline when a local database is available.
+   if (cached.length === 0) {
+    setError(e.message || "تعذر تحميل قاعدة بيانات الأدوية");
+   }
+  } finally {
+   setLoading(false);
+  }
  }
 
  useEffect(()=>{loadDrugs();},[]);
