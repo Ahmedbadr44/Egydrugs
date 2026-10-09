@@ -1,7 +1,6 @@
-import * as SQLite from "expo-sqlite";
 import { supabase } from "./supabase";
 
-const DATABASE_NAME = "egymeds-cache.db";
+export const DATABASE_NAME = "egymeds-cache.db";
 const PAGE_SIZE = 1000;
 const FULL_RECONCILE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const SYNC_OVERLAP_MS = 30 * 1000;
@@ -9,40 +8,28 @@ const SYNC_OVERLAP_MS = 30 * 1000;
 const REMOTE_COLUMNS =
   "id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,use,description,price_egp,price_old_egp,price_updated_at,product_type,updated_at";
 
-let databasePromise;
-
-async function getDatabase() {
-  if (!databasePromise) {
-    databasePromise = (async () => {
-      const db = await SQLite.openDatabaseAsync(DATABASE_NAME);
-      await db.execAsync(`
-        PRAGMA journal_mode = WAL;
-        CREATE TABLE IF NOT EXISTS drugs_cache (
-          id INTEGER PRIMARY KEY NOT NULL,
-          commercial_name_en TEXT NOT NULL DEFAULT '',
-          commercial_name_ar TEXT NOT NULL DEFAULT '',
-          scientific_name TEXT NOT NULL DEFAULT '',
-          manufacturer TEXT NOT NULL DEFAULT '',
-          drug_use TEXT NOT NULL DEFAULT '',
-          description TEXT NOT NULL DEFAULT '',
-          price_egp REAL,
-          price_old_egp REAL,
-          price_updated_at TEXT,
-          product_type TEXT NOT NULL DEFAULT '',
-          updated_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS cache_meta (
-          key TEXT PRIMARY KEY NOT NULL,
-          value TEXT NOT NULL
-        );
-      `);
-      return db;
-    })().catch((error) => {
-      databasePromise = undefined;
-      throw error;
-    });
-  }
-  return databasePromise;
+export async function initializeDrugsDatabase(db) {
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS drugs_cache (
+      id INTEGER PRIMARY KEY NOT NULL,
+      commercial_name_en TEXT NOT NULL DEFAULT '',
+      commercial_name_ar TEXT NOT NULL DEFAULT '',
+      scientific_name TEXT NOT NULL DEFAULT '',
+      manufacturer TEXT NOT NULL DEFAULT '',
+      drug_use TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      price_egp REAL,
+      price_old_egp REAL,
+      price_updated_at TEXT,
+      product_type TEXT NOT NULL DEFAULT '',
+      updated_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS cache_meta (
+      key TEXT PRIMARY KEY NOT NULL,
+      value TEXT NOT NULL
+    );
+  `);
 }
 
 function toMedicine(row) {
@@ -88,8 +75,7 @@ async function readCachedDrugsWithDb(db) {
   return rows.map(toMedicine);
 }
 
-export async function getCachedDrugs() {
-  const db = await getDatabase();
+export async function getCachedDrugs(db) {
   return readCachedDrugsWithDb(db);
 }
 
@@ -176,8 +162,7 @@ async function saveRemoteRows(db, rows, { replaceAll, syncStartedAt }) {
   });
 }
 
-export async function syncDrugs(onProgress) {
-  const db = await getDatabase();
+export async function syncDrugs(db, onProgress) {
   const [countRow, lastSyncAt, lastFullSyncAt] = await Promise.all([
     db.getFirstAsync("SELECT COUNT(*) AS count FROM drugs_cache"),
     getMeta(db, "last_sync_at"),
