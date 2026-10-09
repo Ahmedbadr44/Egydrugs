@@ -18,7 +18,7 @@ export default function App(){
    const rows=[];
    for(let from=0;;from+=PAGE_SIZE){
     const r=await supabase.from("drugs")
-      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,use,description,price_egp,price_old_egp,updated_at,product_type")
+      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,use,description,price_egp,price_old_egp,price_updated_at,product_type")
       .order("id",{ascending:true})
       .range(from,from+PAGE_SIZE-1);
     if(r.error)throw r.error;
@@ -32,11 +32,11 @@ export default function App(){
     price:r.price_egp,
     ingredient:r.scientific_name||"",
     manufacturer:r.manufacturer||"",
-    drugClass:r.description||r.drug_class||"",
+    description:r.description||"",
     use:r.use||"",
     productType:r.product_type||"",
     oldPrice:r.price_old_egp,
-    updatedAt:r.updated_at,
+    priceUpdatedAt:r.price_updated_at,
    })));
   }catch(e){setError(e.message||"تعذر تحميل قاعدة بيانات الأدوية");}
   finally{setLoading(false);}
@@ -158,10 +158,10 @@ export default function App(){
        <Text style={s.sectionTitle}>Drug Information</Text>
        <Info l="Active Ingredient" v={selected.ingredient}/>
        <Info l="Manufacturer" v={selected.manufacturer}/>
-       <Info l="Description" v={selected.drugClass}/>
+       <Info l="Description" v={selected.description}/>
        {selected.productType?<Info l="Product Type" v={String(selected.productType).toUpperCase()}/>:null}
        <Info l="Price" v={price(selected.price)}/>
-       {selected.updatedAt?<Info l="Last Price Update" v={new Date(selected.updatedAt).toLocaleDateString("en-GB")}/>:null}
+       <Info l="Last Price Update" v={selected.priceUpdatedAt ? new Date(selected.priceUpdatedAt).toLocaleDateString("en-GB") : "غير مسجل"}/>
       </View>
 
 
