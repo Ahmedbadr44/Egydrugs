@@ -1,7 +1,13 @@
 import React,{useEffect,useMemo,useState} from "react";
 import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
 import{WebView}from"react-native-webview";
-import { getCachedDrugs, syncDrugs } from "./src/lib/drugsCache";
+import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
+import {
+  DATABASE_NAME,
+  initializeDrugsDatabase,
+  getCachedDrugs,
+  syncDrugs,
+} from "./src/lib/drugsCache";
 import{useDrugSearch}from"./src/search/useDrugSearch";
 import{getEquivalents,dosageFormOf}from"./src/equivalents";
 I18nManager.allowRTL(true);
@@ -9,7 +15,20 @@ const PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
 
 
-export default function App(){
+export default function App() {
+ return (
+  <SQLiteProvider
+   databaseName={DATABASE_NAME}
+   assetSource={{assetId:require("./assets/egymeds-seed.db")}}
+   onInit={initializeDrugsDatabase}
+  >
+   <EgyMedsApp />
+  </SQLiteProvider>
+ );
+}
+
+function EgyMedsApp() {
+ const db = useSQLiteContext();
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
  const[downloadProgress,setDownloadProgress]=useState({loaded:0,total:0,initial:false,complete:false,failed:false});
  const progressPercent=downloadProgress.total>0?Math.min(100,Math.round(downloadProgress.loaded/downloadProgress.total*100)):0;
@@ -18,7 +37,7 @@ export default function App(){
   setError("");
   let cached = [];
   try {
-   cached = await getCachedDrugs();
+   cached = await getCachedDrugs(db);
    setDownloadProgress({loaded:0,total:0,initial:cached.length===0,complete:false,failed:false});
 
    // Show the saved database immediately; refresh runs in the background.
@@ -29,7 +48,7 @@ export default function App(){
     setLoading(true);
    }
 
-   const result = await syncDrugs((progress) => {
+   const result = await syncDrugs(db, (progress) => {
     if (progress.initial) {
      setDownloadProgress({
       loaded: progress.loaded || 0,
