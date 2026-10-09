@@ -560,3 +560,12 @@ Before changing anything:
 - Restored Arabic labels for search, drug details, menu, equivalents, images, pricing, and dosage reference screens.
 - Restored display of the Arabic commercial name on drug cards, equivalents, and the detail screen.
 - Kept the latest database mapping: `description` is used for Drug Class and `uses_summary_en` is used for Dosage Form.
+
+
+## 2026-10-09 — React Native core data cleanup
+
+- The active React Native app uses `public.drugs` as its primary product source.
+- Canonical product fields are `commercial_name_en`, `commercial_name_ar`, `scientific_name`, `manufacturer`, `description`, `use`, `price_egp`, `price_old_egp`, `price_updated_at`, `product_type`, and `id`; source and general record timestamps remain for traceability/sync.
+- Removed exact duplicates `drug_class` (same as `description`), `route` and `uses_summary_en` (same values as `use`).
+- Removed dosage storage from the core product and medical-information tables, and dropped `dosage_reference`. Non-dosage medical metadata tables are retained for now; the React Native core screen does not query them.
+- `price_updated_at` is set only on inserts with a price and actual price changes. Existing records have no reliable price-specific history because earlier row updates refreshed `updated_at`; their `price_updated_at` therefore remains null until the next confirmed price change.
