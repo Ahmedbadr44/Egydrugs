@@ -70,3 +70,18 @@ app/src/test/   اختبارات JUnit بتتشغل على الداتا الحق
 ## تحديث الداتا
 
 لإضافة الأدوية أو تعديلها أو حذفها، استخدم لوحة المتصفح المستقلة في [admin](admin/README.md). لن يظهر أي خيار إدارة داخل التطبيق، والتغيير يصل للأجهزة المفتوحة خلال دقيقة تقريبًا. التعليمات الكاملة في [supabase/SETUP.md](supabase/SETUP.md). ملف CSV يدعم عمود `dosage` الاختياري.
+
+
+## React Native: bundled offline database
+
+Before starting Expo or creating a store build, generate the bundled SQLite asset from the current Supabase data:
+
+```powershell
+npm install
+npm run build:seed-db
+npx expo start -c
+```
+
+The build script reads the app's Supabase URL and publishable key from `src/lib/supabase.js`, downloads the `public.drugs` table in pages, verifies the downloaded row count and SQLite integrity, and writes `assets/egymeds-seed.db`. It does not use a service-role key.
+
+The app opens that bundled asset into its local SQLite database on first launch. It then reads from the local database immediately and synchronizes additions and updates from Supabase; a full reconciliation runs weekly to detect deletions. If you build in the cloud (for example, using EAS Build), commit and push the generated `assets/egymeds-seed.db` so the cloud build can include it.
