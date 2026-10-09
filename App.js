@@ -11,12 +11,15 @@ const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2)
 
 export default function App(){
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
+ const[downloadProgress,setDownloadProgress]=useState({loaded:0,total:0,initial:false,complete:false,failed:false});
+ const progressPercent=downloadProgress.total>0?Math.min(100,Math.round(downloadProgress.loaded/downloadProgress.total*100)):0;
 
  async function loadDrugs(){
   setError("");
   let cached = [];
   try {
    cached = await getCachedDrugs();
+   setDownloadProgress({loaded:0,total:0,initial:cached.length===0,complete:false,failed:false});
 
    // Show the saved database immediately; refresh runs in the background.
    if (cached.length > 0) {
@@ -27,10 +30,22 @@ export default function App(){
    }
 
    const result = await syncDrugs((progress) => {
-    // Populate the screen as each batch is saved during the first download.
-    if (progress.drugs?.length) {
-     setMedicines(progress.drugs);
-     setLoading(false);
+    if (progress.initial) {
+     setDownloadProgress({
+      loaded: progress.loaded || 0,
+      total: progress.total || 0,
+      initial: !progress.complete,
+      complete: Boolean(progress.complete),
+      failed: false,
+     });
+    } else if (progress.complete) {
+     setDownloadProgress({
+      loaded: progress.loaded || 0,
+      total: progress.total || 0,
+      initial: false,
+      complete: true,
+      failed: false,
+     });
     }
    });
    setMedicines(result.drugs);
@@ -39,6 +54,8 @@ export default function App(){
    // Keep working offline when a local database is available.
    if (cached.length === 0) {
     setError(e.message || "تعذر تحميل قاعدة بيانات الأدوية");
+   } else {
+    setDownloadProgress((current) => ({...current, initial:false, failed:true}));
    }
   } finally {
    setLoading(false);
@@ -103,8 +120,35 @@ export default function App(){
     </View>
    </View>
 
+   {!loading && downloadProgress.initial ? (
+    <View style={s.inlineProgress}>
+     <Text style={s.progressTitle}>جاري تحميل قاعدة بيانات الأدوية...</Text>
+     <View style={s.progressTrack}>
+      <View style={[s.progressFill,{width:downloadProgress.total>0?`${progressPercent}%`:"6%"}]}/>
+     </View>
+     <Text style={s.progressCount}>
+      {downloadProgress.loaded.toLocaleString("en-US")} من {downloadProgress.total>0?downloadProgress.total.toLocaleString("en-US"):"..."} دواء ({progressPercent}%)
+     </Text>
+    </View>
+   ) : null}
+   {!loading && downloadProgress.failed && medicines.length>0 ? (
+    <View style={s.inlineProgress}>
+     <Text style={s.progressTitle}>تعذر استكمال التحديث. يتم عرض البيانات المحفوظة.</Text>
+    </View>
+   ) : null}
+
    {loading?
-    <View style={s.center}><ActivityIndicator color="#1774C8"/><Text style={s.status}>جاري تحميل قاعدة بيانات الأدوية...</Text></View>:
+    <View style={s.center}>
+     <ActivityIndicator color="#1774C8"/>
+     <Text style={s.status}>جاري تحميل قاعدة بيانات الأدوية...</Text>
+     <Text style={s.progressCount}>
+      {downloadProgress.loaded.toLocaleString("en-US")} من {downloadProgress.total>0?downloadProgress.total.toLocaleString("en-US"):"..."} دواء ({progressPercent}%)
+     </Text>
+     <View style={s.progressTrack}>
+      <View style={[s.progressFill,{width:downloadProgress.total>0?`${progressPercent}%`:"6%"}]}/>
+     </View>
+     <Text style={s.progressHint}>يتم حفظ الأدوية على الجهاز أثناء التحميل لأول مرة.</Text>
+    </View>:
     error?
     <View style={s.center}>
      <Text style={s.err}>تعذر تحميل قاعدة بيانات الأدوية</Text>
@@ -284,7 +328,13 @@ const s=StyleSheet.create({
  emptyIcon:{fontSize:58,color:"#6D879B",marginBottom:10},
  ready:{fontSize:22,fontWeight:"800",color:"#23303A"},
  status:{marginTop:8,color:"#64727C",textAlign:"center",fontSize:15,lineHeight:21},
- errorText:{color:"#4A555C",textAlign:"center"},
+ progressCount:{marginTop:12,color:"#00695C",textAlign:"center",fontSize:15,fontWeight:"800"},
+progressTrack:{width:"100%",maxWidth:360,height:10,backgroundColor:"#D8E4E0",borderRadius:8,overflow:"hidden",marginTop:14},
+progressFill:{height:"100%",backgroundColor:"#00897B",borderRadius:8},
+progressHint:{marginTop:10,color:"#64727C",textAlign:"center",fontSize:13,lineHeight:19},
+inlineProgress:{marginHorizontal:14,marginTop:10,marginBottom:3,padding:12,borderRadius:10,backgroundColor:"#EAF3EF",borderWidth:1,borderColor:"#CDE1D9"},
+progressTitle:{color:"#00695C",fontSize:14,fontWeight:"800",textAlign:"center"},
+errorText:{color:"#4A555C",textAlign:"center"},
  err:{fontSize:18,fontWeight:"700",color:"#B22C27",marginBottom:8},
  retry:{marginTop:16,backgroundColor:"#00695C",borderRadius:10,paddingVertical:11,paddingHorizontal:22},
  retryText:{color:"#FFF",fontWeight:"800"},
