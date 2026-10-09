@@ -5,7 +5,8 @@ create table if not exists public.drugs (
     scientific_name text not null default '',
     manufacturer text not null default '',
     drug_class text not null default '',
-    route text not null default '',
+    route text not null default '', -- legacy compatibility for the original Kotlin app
+    "use" text not null default '',
     price_egp numeric,
     dosage text not null default '',
     updated_at timestamptz not null default now()
@@ -51,6 +52,43 @@ begin
     return new;
 end;
 $$;
+
+create or replace function public.sync_drugs_use_route()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+    if tg_op = 'INSERT' then
+        if new."use" is null or btrim(new."use") = '' then
+            new.route := coalesce(new.route, '');
+            new."use" := new.route;
+        elsif new.route is null or btrim(new.route) = '' then
+            new.route := new."use";
+        elsif new."use" is distinct from new.route then
+            new.route := new."use";
+        end if;
+    else
+        if new."use" is distinct from old."use"
+           and new.route is not distinct from old.route then
+            new.route := new."use";
+        elsif new.route is distinct from old.route
+           and new."use" is not distinct from old."use" then
+            new."use" := new.route;
+        elsif new."use" is distinct from new.route then
+            new.route := new."use";
+        end if;
+    end if;
+    return new;
+end;
+$;
+
+revoke all on function public.sync_drugs_use_route() from public, anon, authenticated;
+
+drop trigger if exists sync_drugs_use_route on public.drugs;
+create trigger sync_drugs_use_route
+    before insert or update on public.drugs
+    for each row execute function public.sync_drugs_use_route();
 
 revoke all on function public.set_drug_updated_at() from public, anon, authenticated;
 
