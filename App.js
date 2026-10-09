@@ -7,7 +7,7 @@ import{getEquivalents,dosageFormOf}from"./src/equivalents";
 I18nManager.allowRTL(true);
 const PAGE_SIZE=1000,PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
-const route=v=>({"ORAL.SOLID":"Tablets / Capsules","ORAL.LIQUID":"Oral Liquid","INJECTION":"Injection",TOPICAL:"Topical",EFF:"Effervescent",SPRAY:"Spray",EYE:"Ophthalmic",VAGINAL:"Vaginal",MOUTH:"Oral",RECTAL:"Rectal",SOAP:"Soap",EAR:"Otic"}[String(v||"").toUpperCase()]||v||"Unknown");
+
 
 export default function App(){
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
@@ -18,7 +18,7 @@ export default function App(){
    const rows=[];
    for(let from=0;;from+=PAGE_SIZE){
     const r=await supabase.from("drugs")
-      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,route,description,uses_summary_en,price_egp,price_old_egp,updated_at,product_type")
+      .select("id,commercial_name_en,commercial_name_ar,scientific_name,manufacturer,drug_class,use,description,price_egp,price_old_egp,updated_at,product_type")
       .order("id",{ascending:true})
       .range(from,from+PAGE_SIZE-1);
     if(r.error)throw r.error;
@@ -33,7 +33,7 @@ export default function App(){
     ingredient:r.scientific_name||"",
     manufacturer:r.manufacturer||"",
     drugClass:r.description||r.drug_class||"",
-    route:r.uses_summary_en||r.route||"",
+    use:r.use||"",
     productType:r.product_type||"",
     oldPrice:r.price_old_egp,
     updatedAt:r.updated_at,
