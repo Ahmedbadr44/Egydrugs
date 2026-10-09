@@ -94,8 +94,6 @@ export function getEquivalents(rows,selected,{sameRoute=false,sameStrength=false
  const selectedIng=ingredientKey(selected?.scientific_name||selected?.ingredient||"");
  if(!selectedIng) return [];
  const selectedStrength=strengthOf(selected?.commercial_name_en||selected?.nameEn||"");
- const selectedRoute=String(selected?.route||"").trim().toUpperCase();
- const selectedHasRoute=selectedRoute!==""&&selectedRoute!=="UNKNOWN";
  const selectedType=String(selected?.product_type||selected?.productType||"").trim().toUpperCase();
  return rows
   .filter(row=>{
