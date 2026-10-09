@@ -6,7 +6,8 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "build:seed-db": "py -3 build_seed_db.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
