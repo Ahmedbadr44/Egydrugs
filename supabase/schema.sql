@@ -4,11 +4,15 @@ create table if not exists public.drugs (
     commercial_name_ar text not null default '',
     scientific_name text not null default '',
     manufacturer text not null default '',
-    drug_class text not null default '',
-    route text not null default '', -- legacy compatibility for the original Kotlin app
+    description text not null default '',
     "use" text not null default '',
     price_egp numeric,
-    dosage text not null default '',
+    price_old_egp numeric,
+    price_updated_at timestamptz,
+    price_source text,
+    source_record_id bigint,
+    source_name text,
+    product_type text check (product_type is null or product_type = any (array['MEDICINE','COSMETIC','SUPPLEMENT','MEDICAL_DEVICE','OTHER'])),
     updated_at timestamptz not null default now()
 );
 
@@ -53,49 +57,36 @@ begin
 end;
 $$;
 
-create or replace function public.sync_drugs_use_route()
-returns trigger
-language plpgsql
-set search_path = ''
-as $
-begin
-    if tg_op = 'INSERT' then
-        if new."use" is null or btrim(new."use") = '' then
-            new.route := coalesce(new.route, '');
-            new."use" := new.route;
-        elsif new.route is null or btrim(new.route) = '' then
-            new.route := new."use";
-        elsif new."use" is distinct from new.route then
-            new.route := new."use";
-        end if;
-    else
-        if new."use" is distinct from old."use"
-           and new.route is not distinct from old.route then
-            new.route := new."use";
-        elsif new.route is distinct from old.route
-           and new."use" is not distinct from old."use" then
-            new."use" := new.route;
-        elsif new."use" is distinct from new.route then
-            new.route := new."use";
-        end if;
-    end if;
-    return new;
-end;
-$;
-
-revoke all on function public.sync_drugs_use_route() from public, anon, authenticated;
-
-drop trigger if exists sync_drugs_use_route on public.drugs;
-create trigger sync_drugs_use_route
-    before insert or update on public.drugs
-    for each row execute function public.sync_drugs_use_route();
-
 revoke all on function public.set_drug_updated_at() from public, anon, authenticated;
 
 drop trigger if exists set_drug_updated_at on public.drugs;
 create trigger set_drug_updated_at
     before update on public.drugs
     for each row execute function public.set_drug_updated_at();
+
+create or replace function public.set_drug_price_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+    if tg_op = 'INSERT' then
+        if new.price_egp is not null and new.price_updated_at is null then
+            new.price_updated_at = now();
+        end if;
+    elsif new.price_egp is distinct from old.price_egp then
+        new.price_updated_at = now();
+    end if;
+    return new;
+end;
+$;
+
+revoke all on function public.set_drug_price_updated_at() from public, anon, authenticated;
+
+drop trigger if exists set_drug_price_updated_at on public.drugs;
+create trigger set_drug_price_updated_at
+    before insert or update of price_egp on public.drugs
+    for each row execute function public.set_drug_price_updated_at();
 
 create or replace function public.bump_drug_data_version()
 returns trigger
