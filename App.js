@@ -26,7 +26,13 @@ export default function App(){
     setLoading(true);
    }
 
-   const result = await syncDrugs();
+   const result = await syncDrugs((progress) => {
+    // Populate the screen as each batch is saved during the first download.
+    if (progress.drugs?.length) {
+     setMedicines(progress.drugs);
+     setLoading(false);
+    }
+   });
    setMedicines(result.drugs);
    setError("");
   } catch (e) {
