@@ -209,6 +209,18 @@ export async function syncDrugs(onProgress) {
   const bootstrapSync = fullSync && !lastFullSyncAt;
   if (bootstrapSync) {
     const accumulatedRows = [];
+    const { count: remoteTotal, error: countError } = await supabase
+      .from("drugs")
+      .select("id", { count: "exact", head: true });
+
+    if (countError) throw countError;
+
+    onProgress?.({
+      loaded: 0,
+      total: Number(remoteTotal || 0),
+      initial: true,
+      complete: false,
+    });
 
     for (let from = 0; ; from += PAGE_SIZE) {
       const { data, error } = await supabase
@@ -229,8 +241,9 @@ export async function syncDrugs(onProgress) {
 
       accumulatedRows.push(...page);
       onProgress?.({
-        drugs: accumulatedRows.map(toMedicine),
         loaded: accumulatedRows.length,
+        total: Number(remoteTotal || 0),
+        initial: true,
         complete: false,
       });
 
@@ -241,7 +254,13 @@ export async function syncDrugs(onProgress) {
     await setMeta(db, "last_full_sync_at", syncStartedAt);
 
     const drugs = await readCachedDrugsWithDb(db);
-    onProgress?.({ drugs, loaded: drugs.length, complete: true });
+    onProgress?.({
+      drugs,
+      loaded: drugs.length,
+      total: Number(remoteTotal || drugs.length),
+      initial: true,
+      complete: true,
+    });
     return { drugs, syncedRows: drugs.length, fullSync: true };
   }
 
@@ -251,7 +270,13 @@ export async function syncDrugs(onProgress) {
     syncStartedAt,
   });
   const drugs = await readCachedDrugsWithDb(db);
-  onProgress?.({ drugs, loaded: rows.length, complete: true });
+  onProgress?.({
+    drugs,
+    loaded: rows.length,
+    total: rows.length,
+    initial: false,
+    complete: true,
+  });
 
   return {
     drugs,
