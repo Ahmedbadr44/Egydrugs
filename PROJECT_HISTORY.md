@@ -48,9 +48,10 @@ Important columns:
 - `scientific_name` text
 - `manufacturer` text
 - `drug_class` text
-- `route` text
+- `use` text — canonical uses/indications field used by the React Native branch and admin tools
+- `route` text — temporary compatibility field for the original Kotlin app; keep synced with `use` until that app is migrated or retired
 - `price_egp` numeric
-- `dosage` text
+- `dosage` text — legacy compatibility; do not drop while the original Kotlin app still selects it
 - `updated_at` timestamptz
 - `product_type` text
 
