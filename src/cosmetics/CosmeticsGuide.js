@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { supabase } from "./src/lib/supabase";
+import { supabase } from "../lib/supabase";
 
 export default function CosmeticsGuide() {
   const [categories, setCategories] = useState([]);
