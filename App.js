@@ -259,9 +259,6 @@ function EgyMedsApp() {
    <Pressable style={s.menuOverlay} onPress={()=>setMenuOpen(false)}>
     <Pressable style={s.menuPanel} onPress={e=>e.stopPropagation()}>
      <Text style={s.menuTitle}>القائمة</Text>
-     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("guide");}}>
-      <Text style={s.menuItemText}>دليل الأدوية</Text>
-     </Pressable>
      <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("supplements");}}>
       <Text style={s.menuItemText}>دليل المكملات الغذائية</Text>
      </Pressable>
