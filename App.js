@@ -20,7 +20,6 @@ export default function App() {
  return (
   <SQLiteProvider
    databaseName={DATABASE_NAME}
-   assetSource={{assetId:require("./assets/egymeds-seed.db")}}
    onInit={initializeDrugsDatabase}
   >
    <EgyMedsApp />
