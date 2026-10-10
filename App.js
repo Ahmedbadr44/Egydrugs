@@ -10,6 +10,7 @@ import {
 } from "./src/lib/drugsCache";
 import{useDrugSearch}from"./src/search/useDrugSearch";
 import{getEquivalents,dosageFormOf}from"./src/equivalents";
+import CosmeticsGuide from "./src/cosmetics/CosmeticsGuide";
 I18nManager.allowRTL(true);
 const PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
@@ -276,10 +277,10 @@ function EgyMedsApp() {
    <SafeAreaView style={s.safe}>
     <View style={s.container}>
      <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>رجوع</Text></Pressable>
-           <View style={s.toolPage}>
+           {toolScreen==="cosmetics" ? <CosmeticsGuide /> : <View style={s.toolPage}>
        <Text style={s.toolTitle}>{toolScreen==="guide"?"Drug Guide":toolScreen==="supplements"?"دليل المكملات الغذائية":toolScreen==="prices"?"Price Updates":"Cosmetics Guide"}</Text>
        <Text style={s.toolHint}>{toolScreen==="guide"?"دليل الأدوية جاهز لمرحلة التنفيذ التالية.":toolScreen==="supplements"?"دليل المكملات الغذائية جاهز لمرحلة التنفيذ التالية.":toolScreen==="prices"?"تحديث الأسعار جاهز لمرحلة التنفيذ التالية.":"دليل مستحضرات التجميل جاهز لمرحلة التنفيذ التالية."}</Text>
-      </View>
+      </View>}
     </View>
    </SafeAreaView>
   </Modal>
