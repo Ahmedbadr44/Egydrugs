@@ -193,9 +193,8 @@ function EgyMedsApp() {
 
   <View style={s.bottom}>
    <Pressable onPress={()=>Linking.openURL("tel:"+PHONE)}>
-    <Text style={s.call}>للتواصل والإعلان: {PHONE}</Text>
+    <Text style={s.call}>{PHONE}</Text>
    </Pressable>
-   <Text style={s.author}>Dr Ahmed badr</Text>
   </View>
 
   <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}>
@@ -239,7 +238,7 @@ function EgyMedsApp() {
 
 
       <View style={s.eqSection}>
-       <Text style={s.eqTitle}>البدائل المتاحة ({equivalents.length})</Text>
+       <Text style={s.eqTitle}>المثائل المتاحة ({equivalents.length})</Text>
        <View style={s.eqFilters}>
         {hasDosageForm(selected.nameEn)?
          <Pressable style={[s.eqChip,sameRoute&&s.eqChipActive]} onPress={()=>setSameRoute(v=>!v)}>
