@@ -34,6 +34,8 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Test drug search behavior
+        run: npx --yes tsx --test src/search/drugSearch.test.ts
       - run: npx expo export --platform android
       - name: Install EAS CLI
         run: npm install --global eas-cli
