@@ -14,6 +14,10 @@ import CosmeticsGuide from "./src/cosmetics/CosmeticsGuide";
 I18nManager.allowRTL(true);
 const PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
+// UI-only formatter: present English names in Title Case without changing stored data.
+const titleCase=v=>String(v||"").toLowerCase().replace(/(^|[\\s(/-])([a-z])/g,(_,p,l)=>p+l.toUpperCase());
+// UI-only formatter: turn dot-separated descriptions into readable comma-separated text.
+const formatDescription=v=>String(v||"").replace(/\\s*\\.\\s*/g,", ").replace(/\\s*,\\s*/g,", ").replace(/\\s{2,}/g," ").replace(/^,|,$/g,"").trim();
 
 
 export default function App() {
@@ -99,7 +103,7 @@ function EgyMedsApp() {
  const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.nameAr,selected.manufacturer,selected.ingredient].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
   <View style={s.cardMain}>
-   <Text style={s.cardNameEn} numberOfLines={2}>{item.nameEn||"-"}</Text>
+   <Text style={s.cardNameEn} numberOfLines={2}>{titleCase(item.nameEn)||"-"}</Text>
    {item.nameAr?<Text style={s.cardNameAr} numberOfLines={2}>{item.nameAr}</Text>:null}
    {item.ingredient?<Text style={s.cardIngredient} numberOfLines={2}>{item.ingredient}</Text>:null}
    <Text style={s.cardCompany} numberOfLines={1}>{item.manufacturer||"-"}</Text>
@@ -209,7 +213,7 @@ function EgyMedsApp() {
        </Pressable>
        <View style={s.heroRow}>
         <View style={s.heroNameBlock}>
-         <Text style={s.heroNameEn}>{selected.nameEn||"-"}</Text>
+         <Text style={s.heroNameEn}>{titleCase(selected.nameEn)||"-"}</Text>
          {selected.nameAr?<Text style={s.heroNameAr}>{selected.nameAr}</Text>:null}
         </View>
         <View style={s.heroPriceBlock}>
@@ -322,23 +326,23 @@ const s=StyleSheet.create({
  headerIcon:{width:48,height:48,alignItems:"center",justifyContent:"center"},
  headerIconText:{fontSize:31,color:"#FFF",fontWeight:"700"},
  searchShell:{marginHorizontal:16,marginTop:14,backgroundColor:"#FFFDF8",borderWidth:2,borderColor:"#56A79E",borderRadius:11,paddingHorizontal:13,paddingTop:7,paddingBottom:10,elevation:2},
- searchLabel:{position:"absolute",top:-13,left:14,backgroundColor:"#F7F5ED",paddingHorizontal:7,color:"#3E8F87",fontSize:17,fontWeight:"600"},
+ searchLabel:{position:"absolute",top:-13,left:14,backgroundColor:"#F7F5ED",paddingHorizontal:7,color:"#23443D",fontSize:19,fontWeight:"800"},
  search:{backgroundColor:"#FFFDF8",paddingVertical:12,paddingHorizontal:7,fontSize:20,textAlign:"right",color:"#22302D"},
  searchActions:{flexDirection:"row-reverse",gap:8,marginTop:4},
  modeButton:{borderWidth:1,borderColor:"#D0D9DF",borderRadius:18,paddingHorizontal:13,paddingVertical:7,backgroundColor:"#FFF"},
  modeButtonActive:{backgroundColor:"#E1F1EC",borderColor:"#56A79E"},
  modeText:{fontSize:14,color:"#65727D"},
  modeTextActive:{fontSize:14,color:"#00695C",fontWeight:"800"},
- list:{paddingHorizontal:12,paddingTop:12,paddingBottom:115},
+ list:{paddingHorizontal:12,paddingTop:16,paddingBottom:115}, // UI change: extra top spacing keeps the first result clear of the fixed search area.
  card:{backgroundColor:"#FBFAF3",borderRadius:10,borderWidth:1,borderColor:"#ECE8DA",paddingVertical:11,paddingHorizontal:12,marginBottom:9,flexDirection:"row-reverse",elevation:1},
  cardMain:{flex:1,minWidth:0,paddingLeft:9,alignItems:"flex-start"},
- cardNameEn:{fontSize:18,fontWeight:"800",color:"#06463F",textAlign:"left",width:"100%",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
+ cardNameEn:{fontSize:19,fontWeight:"900",color:"#06463F",textAlign:"left",width:"100%",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
  cardNameAr:{marginTop:4,fontSize:16,color:"#536D65",textAlign:"right",width:"100%",textBreakStrategy:"simple"},
  cardIngredient:{marginTop:6,fontSize:14,fontWeight:"700",color:"#187168",textAlign:"left",width:"100%",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
  cardCompany:{marginTop:4,fontSize:13,color:"#7A857E",textAlign:"left",width:"100%"},
  cardPriceCol:{width:105,alignItems:"flex-start",justifyContent:"flex-start",paddingTop:0,marginRight:16},
- cardPrice:{fontSize:21,fontWeight:"900",color:"#C62828",textAlign:"left",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
- cardOldPrice:{fontSize:15,color:"#606863",textDecorationLine:"line-through",marginTop:2},
+ cardPrice:{fontSize:20,fontWeight:"900",color:"#267348",textAlign:"left",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
+ cardOldPrice:{fontSize:13,color:"#858B87",textDecorationLine:"line-through",marginTop:3},
  center:{flex:1,alignItems:"center",justifyContent:"center",padding:30},
  emptyHome:{flex:1,alignItems:"center",justifyContent:"center",paddingBottom:120},
  emptyIcon:{fontSize:58,color:"#6D879B",marginBottom:10},
@@ -354,9 +358,9 @@ errorText:{color:"#4A555C",textAlign:"center"},
  err:{fontSize:18,fontWeight:"700",color:"#B22C27",marginBottom:8},
  retry:{marginTop:16,backgroundColor:"#00695C",borderRadius:10,paddingVertical:11,paddingHorizontal:22},
  retryText:{color:"#FFF",fontWeight:"800"},
- bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#DCE8DE",borderTopWidth:1,borderTopColor:"#C9D9CD",paddingVertical:7,alignItems:"center"},
+ bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#DCE8DE",borderTopWidth:1,borderTopColor:"#C9D9CD",paddingVertical:4,alignItems:"center"},
  author:{marginTop:2,color:"#4A555C",fontSize:12,fontWeight:"700"},
- call:{color:"#2E5A52",fontWeight:"800"},
+ call:{color:"#2E5A52",fontWeight:"700",fontSize:12},
  menuButton:{position:"absolute",right:10,top:10,width:46,height:46,borderRadius:10},
  menuIcon:{fontSize:25,color:"#1976D2",fontWeight:"700"},
  menuOverlay:{flex:1,backgroundColor:"rgba(0,0,0,.18)"},
@@ -365,7 +369,7 @@ errorText:{color:"#4A555C",textAlign:"center"},
  menuItem:{borderTopWidth:1,borderTopColor:"#E2E8E5",paddingVertical:15,paddingHorizontal:10},
  menuItemText:{fontSize:16,fontWeight:"800",color:"#24574F",textAlign:"right"},
  detailScreen:{flex:1,backgroundColor:"#F7F5ED"},
- detailHeader:{height:72,backgroundColor:"#00695C",flexDirection:"row",alignItems:"center",justifyContent:"space-between",paddingHorizontal:12},
+ detailHeader:{height:72,backgroundColor:"#00695C",flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:12}, // UI change: back control sits on the RTL right; favorite sits on the left.
  detailHeaderIcon:{width:48,height:48,alignItems:"center",justifyContent:"center"},
  backIcon:{fontSize:47,color:"#FFF",fontWeight:"300",lineHeight:47},
  detailHeaderTitle:{fontSize:23,fontWeight:"900",color:"#FFF"},
@@ -374,15 +378,15 @@ errorText:{color:"#4A555C",textAlign:"center"},
  detailScroll:{padding:12,paddingBottom:100},
  heroCard:{backgroundColor:"#FFF",borderRadius:18,padding:14,elevation:4,shadowColor:"#000",shadowOpacity:.1,shadowRadius:8,shadowOffset:{width:0,height:4}},
  imageSearchHero:{minHeight:190,alignItems:"center",justifyContent:"center",backgroundColor:"#F3F8F6",borderWidth:2,borderColor:"#79B9AE",borderRadius:16,paddingHorizontal:18,paddingVertical:20},
- imageSearchHeroTitle:{fontSize:28,fontWeight:"900",color:"#06463F"},
+ imageSearchHeroTitle:{fontSize:18,fontWeight:"900",color:"#06463F",textAlign:"center"},\n // UI change: icon is a visual fallback when a drug image is not available.\n medicineIcon:{fontSize:42,marginBottom:8},
   heroRow:{flexDirection:"row-reverse",alignItems:"flex-start",justifyContent:"space-between",marginTop:14,gap:8},
  heroNameBlock:{flex:1,alignItems:"flex-start"},
- heroNameEn:{fontSize:25,fontWeight:"900",color:"#2473AF",textAlign:"left"},
+ heroNameEn:{fontSize:23,fontWeight:"900",color:"#2473AF",textAlign:"left"},
  heroNameAr:{fontSize:18,color:"#1B1B1B",marginTop:4,textAlign:"right"},
  heroPriceBlock:{width:125,alignItems:"flex-end"},
  currentPriceLabel:{fontSize:15,color:"#6B757D",textAlign:"right"},
  currentPrice:{fontSize:28,fontWeight:"900",color:"#2A8E48",textAlign:"right"},
- heroOldPrice:{fontSize:16,color:"#D16B68",textDecorationLine:"line-through",marginTop:2},
+ heroOldPrice:{fontSize:14,color:"#858B87",textDecorationLine:"line-through",marginTop:3},
  infoCard:{backgroundColor:"#FFF",borderRadius:18,marginTop:14,overflow:"hidden",elevation:2},
  sectionTitle:{color:"#00695C",fontSize:22,fontWeight:"900",textAlign:"right",paddingHorizontal:18,paddingVertical:15},
  info:{borderTopWidth:1,borderTopColor:"#E5E9E6",paddingHorizontal:16,paddingVertical:14,flexDirection:"row",alignItems:"flex-start",justifyContent:"space-between",minHeight:58},
@@ -402,7 +406,7 @@ errorText:{color:"#4A555C",textAlign:"center"},
  eqEn:{fontSize:15,fontWeight:"800",color:"#1B5D8B",textAlign:"left",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
  eqAr:{fontSize:14,color:"#333",marginTop:3,textAlign:"right"},
  eqCo:{fontSize:11,color:"#7A8582",marginTop:5,textAlign:"left"},
- eqPrice:{width:82,fontSize:14,fontWeight:"900",color:"#D73531",textAlign:"left",marginRight:18,marginLeft:0,textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
+ eqPrice:{width:82,fontSize:14,fontWeight:"900",color:"#267348",textAlign:"left",marginRight:18,marginLeft:0,textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
  imageButton:{marginTop:12,backgroundColor:"#1976D2",borderRadius:10,paddingVertical:12,alignItems:"center"},
  imageButtonText:{color:"#FFF",fontSize:15,fontWeight:"800"},
  toolScroll:{paddingBottom:100},
