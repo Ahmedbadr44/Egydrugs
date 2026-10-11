@@ -1,0 +1,46 @@
+name: Export final Supabase drugs data
+
+on:
+  push:
+    branches:
+      - supabase-export-2026-10-12
+    paths:
+      - .github/workflows/export-supabase-drugs.yml
+      - scripts/export_supabase_drugs.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out export branch
+        uses: actions/checkout@v4
+        with:
+          ref: supabase-export-2026-10-12
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Export all current rows from Supabase
+        env:
+          SUPABASE_URL: "https://lfxdgtbsmomafyaolndh.supabase.co"
+          SUPABASE_API_KEY: "sb_publishable_A9K53JorCDERk7MtJG5wiw_z_Jm0bX0"
+        run: node scripts/export_supabase_drugs.mjs
+
+      - name: Commit CSV export
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add exports/egymeds_drugs_final_2026-10-12.csv
+          if git diff --cached --quiet; then
+            echo "CSV is already up to date."
+            exit 0
+          fi
+          git commit -m "Export latest Supabase drugs data"
+          git push origin HEAD:supabase-export-2026-10-12
