@@ -10,7 +10,6 @@ import {
 } from "./src/lib/drugsCache";
 import{useDrugSearch}from"./src/search/useDrugSearch";
 import{getEquivalents,dosageFormOf}from"./src/equivalents";
-import CosmeticsGuide from "./src/cosmetics/CosmeticsGuide";
 I18nManager.allowRTL(true);
 const PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
@@ -24,6 +23,9 @@ export default function App() {
  return (
   <SQLiteProvider
    databaseName={DATABASE_NAME}
+   // Bundled starter database (built by build_seed_db.py). It is copied once on
+   // first launch; after that only changes are synced from Supabase.
+   assetSource={{ assetId: require("./assets/egymeds-seed.db") }}
    onInit={initializeDrugsDatabase}
   >
    <EgyMedsApp />
@@ -33,7 +35,7 @@ export default function App() {
 
 function EgyMedsApp() {
  const db = useSQLiteContext();
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
  const[downloadProgress,setDownloadProgress]=useState({loaded:0,total:0,initial:false,complete:false,failed:false});
  const progressPercent=downloadProgress.total>0?Math.min(100,Math.round(downloadProgress.loaded/downloadProgress.total*100)):0;
 
@@ -119,7 +121,7 @@ function EgyMedsApp() {
   <StatusBar barStyle="dark-content"/>
   <View style={s.container}>
    <View style={s.homeHeader}>
-    <Pressable style={s.headerIcon} onPress={()=>setMenuOpen(true)}><Text style={s.headerIconText}>☰</Text></Pressable>
+    <View style={s.headerIcon}/>
     <View style={s.headerCenter}>
      <Text style={s.headerTitle}>EgyMeds</Text>
     </View>
@@ -258,35 +260,6 @@ function EgyMedsApp() {
        }
       </View>
      </ScrollView>}
-    </View>
-   </SafeAreaView>
-  </Modal>
-
-  <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={()=>setMenuOpen(false)}>
-   <Pressable style={s.menuOverlay} onPress={()=>setMenuOpen(false)}>
-    <Pressable style={s.menuPanel} onPress={e=>e.stopPropagation()}>
-     <Text style={s.menuTitle}>القائمة</Text>
-     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("supplements");}}>
-      <Text style={s.menuItemText}>دليل المكملات الغذائية</Text>
-     </Pressable>
-     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("cosmetics");}}>
-      <Text style={s.menuItemText}>دليل مستحضرات التجميل</Text>
-     </Pressable>
-     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("prices");}}>
-      <Text style={s.menuItemText}>تحديث الأسعار</Text>
-     </Pressable>
-    </Pressable>
-   </Pressable>
-  </Modal>
-
-  <Modal visible={!!toolScreen} animationType="slide" onRequestClose={()=>setToolScreen(null)}>
-   <SafeAreaView style={s.safe}>
-    <View style={s.container}>
-     <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>رجوع</Text></Pressable>
-           {toolScreen==="cosmetics" ? <CosmeticsGuide /> : <View style={s.toolPage}>
-       <Text style={s.toolTitle}>{toolScreen==="guide"?"Drug Guide":toolScreen==="supplements"?"دليل المكملات الغذائية":toolScreen==="prices"?"Price Updates":"Cosmetics Guide"}</Text>
-       <Text style={s.toolHint}>{toolScreen==="guide"?"دليل الأدوية جاهز لمرحلة التنفيذ التالية.":toolScreen==="supplements"?"دليل المكملات الغذائية جاهز لمرحلة التنفيذ التالية.":toolScreen==="prices"?"تحديث الأسعار جاهز لمرحلة التنفيذ التالية.":"دليل مستحضرات التجميل جاهز لمرحلة التنفيذ التالية."}</Text>
-      </View>}
     </View>
    </SafeAreaView>
   </Modal>
