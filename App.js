@@ -1,5 +1,6 @@
 import React,{useEffect,useMemo,useState} from "react";
-import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
+import{ActivityIndicator,FlatList,I18nManager,Linking,Modal,Pressable,ScrollView,StatusBar,StyleSheet,Text,TextInput,View}from"react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import{WebView}from"react-native-webview";
 import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
 import {
@@ -21,13 +22,15 @@ const formatDescription=v=>String(v||"").replace(/\s*\.\s*/g,", ").replace(/\s*,
 
 export default function App() {
  return (
-  <SQLiteProvider
-   databaseName={DATABASE_NAME}
-   assetSource={{ assetId: require("./assets/egymeds-seed.db") }}
-   onInit={initializeDrugsDatabase}
-  >
-   <EgyMedsApp />
-  </SQLiteProvider>
+  <SafeAreaProvider>
+   <SQLiteProvider
+    databaseName={DATABASE_NAME}
+    assetSource={{ assetId: require("./assets/egymeds-seed.db") }}
+    onInit={initializeDrugsDatabase}
+   >
+    <EgyMedsApp />
+   </SQLiteProvider>
+  </SafeAreaProvider>
  );
 }
 
@@ -287,7 +290,8 @@ function EgyMedsApp() {
   </View>
 
   <Modal visible={!!selected} animationType="slide" onRequestClose={()=>setSelected(null)}>
-   <SafeAreaView style={s.safe}>
+   <SafeAreaProvider>
+    <SafeAreaView style={s.safe}>
     <View style={s.detailScreen}>
      <View style={s.detailHeader}>
       <Pressable style={s.detailHeaderIcon} onPress={()=>setSelected(null)}><Text style={s.backIcon}>‹</Text></Pressable>
@@ -347,11 +351,13 @@ function EgyMedsApp() {
       </View>
      </ScrollView>}
     </View>
-   </SafeAreaView>
+    </SafeAreaView>
+   </SafeAreaProvider>
   </Modal>
 
   <Modal visible={!!imageUrl} animationType="slide" onRequestClose={()=>setImageUrl("")}>
-   <SafeAreaView style={s.safe}>
+   <SafeAreaProvider>
+    <SafeAreaView style={s.safe}>
     <View style={s.browserHeader}>
      <Pressable style={s.browserBack} onPress={()=>setImageUrl("")}><Text style={s.browserBackText}>رجوع</Text></Pressable>
      <Text style={s.browserTitle}>صور الدواء</Text>
@@ -364,7 +370,8 @@ function EgyMedsApp() {
       domStorageEnabled
       setSupportMultipleWindows={false}
     />:null}
-   </SafeAreaView>
+    </SafeAreaView>
+   </SafeAreaProvider>
   </Modal>
  </SafeAreaView>;
 }
