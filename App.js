@@ -10,7 +10,6 @@ import {
 } from "./src/lib/drugsCache";
 import{useDrugSearch}from"./src/search/useDrugSearch";
 import{getEquivalents,dosageFormOf}from"./src/equivalents";
-import CosmeticsGuide from "./src/cosmetics/CosmeticsGuide";
 I18nManager.allowRTL(true);
 const PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
@@ -33,7 +32,7 @@ export default function App() {
 
 function EgyMedsApp() {
  const db = useSQLiteContext();
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[toolScreen,setToolScreen]=useState(null);
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
  const[downloadProgress,setDownloadProgress]=useState({loaded:0,total:0,initial:false,complete:false,failed:false});
  const progressPercent=downloadProgress.total>0?Math.min(100,Math.round(downloadProgress.loaded/downloadProgress.total*100)):0;
 
@@ -119,7 +118,8 @@ function EgyMedsApp() {
   <StatusBar barStyle="dark-content"/>
   <View style={s.container}>
    <View style={s.homeHeader}>
-    <Pressable style={s.headerIcon} onPress={()=>setMenuOpen(true)}><Text style={s.headerIconText}>☰</Text></Pressable>
+    {/* Keep the title centered after removing the navigation menu. */}
+    <View style={s.headerIcon} />
     <View style={s.headerCenter}>
      <Text style={s.headerTitle}>EgyMeds</Text>
     </View>
@@ -262,35 +262,6 @@ function EgyMedsApp() {
    </SafeAreaView>
   </Modal>
 
-  <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={()=>setMenuOpen(false)}>
-   <Pressable style={s.menuOverlay} onPress={()=>setMenuOpen(false)}>
-    <Pressable style={s.menuPanel} onPress={e=>e.stopPropagation()}>
-     <Text style={s.menuTitle}>القائمة</Text>
-     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("supplements");}}>
-      <Text style={s.menuItemText}>دليل المكملات الغذائية</Text>
-     </Pressable>
-     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("cosmetics");}}>
-      <Text style={s.menuItemText}>دليل مستحضرات التجميل</Text>
-     </Pressable>
-     <Pressable style={s.menuItem} onPress={()=>{setMenuOpen(false);setToolScreen("prices");}}>
-      <Text style={s.menuItemText}>تحديث الأسعار</Text>
-     </Pressable>
-    </Pressable>
-   </Pressable>
-  </Modal>
-
-  <Modal visible={!!toolScreen} animationType="slide" onRequestClose={()=>setToolScreen(null)}>
-   <SafeAreaView style={s.safe}>
-    <View style={s.container}>
-     <Pressable onPress={()=>setToolScreen(null)}><Text style={s.back}>رجوع</Text></Pressable>
-           {toolScreen==="cosmetics" ? <CosmeticsGuide /> : <View style={s.toolPage}>
-       <Text style={s.toolTitle}>{toolScreen==="guide"?"Drug Guide":toolScreen==="supplements"?"دليل المكملات الغذائية":toolScreen==="prices"?"Price Updates":"Cosmetics Guide"}</Text>
-       <Text style={s.toolHint}>{toolScreen==="guide"?"دليل الأدوية جاهز لمرحلة التنفيذ التالية.":toolScreen==="supplements"?"دليل المكملات الغذائية جاهز لمرحلة التنفيذ التالية.":toolScreen==="prices"?"تحديث الأسعار جاهز لمرحلة التنفيذ التالية.":"دليل مستحضرات التجميل جاهز لمرحلة التنفيذ التالية."}</Text>
-      </View>}
-    </View>
-   </SafeAreaView>
-  </Modal>
-
   <Modal visible={!!imageUrl} animationType="slide" onRequestClose={()=>setImageUrl("")}>
    <SafeAreaView style={s.safe}>
     <View style={s.browserHeader}>
@@ -368,13 +339,6 @@ errorText:{color:"#4A555C",textAlign:"center"},
  bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#DCE8DE",borderTopWidth:1,borderTopColor:"#C9D9CD",paddingVertical:4,alignItems:"center"},
  author:{marginTop:2,color:"#4A555C",fontSize:12,fontWeight:"700"},
  call:{color:"#2E5A52",fontWeight:"700",fontSize:12},
- menuButton:{position:"absolute",right:10,top:10,width:46,height:46,borderRadius:10},
- menuIcon:{fontSize:25,color:"#1976D2",fontWeight:"700"},
- menuOverlay:{flex:1,backgroundColor:"rgba(0,0,0,.18)"},
- menuPanel:{position:"absolute",top:76,left:12,width:245,backgroundColor:"#FFFDF8",borderWidth:1,borderColor:"#A8C9C2",borderRadius:14,padding:8,elevation:8,shadowColor:"#000",shadowOpacity:.16,shadowRadius:10,shadowOffset:{width:0,height:5}},
- menuTitle:{fontSize:19,fontWeight:"900",color:"#00695C",textAlign:"right",paddingVertical:10,paddingHorizontal:10},
- menuItem:{borderTopWidth:1,borderTopColor:"#E2E8E5",paddingVertical:15,paddingHorizontal:10},
- menuItemText:{fontSize:16,fontWeight:"800",color:"#24574F",textAlign:"right"},
  detailScreen:{flex:1,backgroundColor:"#F7F5ED"},
  detailHeader:{height:72,backgroundColor:"#00695C",flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:12}, // UI change: back control sits on the RTL right; favorite sits on the left.
  detailHeaderIcon:{width:48,height:48,alignItems:"center",justifyContent:"center"},
@@ -418,11 +382,6 @@ errorText:{color:"#4A555C",textAlign:"center"},
  eqPrice:{width:82,fontSize:14,fontWeight:"900",color:"#267348",textAlign:"left",marginRight:18,marginLeft:0,textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
  imageButton:{marginTop:12,backgroundColor:"#1976D2",borderRadius:10,paddingVertical:12,alignItems:"center"},
  imageButtonText:{color:"#FFF",fontSize:15,fontWeight:"800"},
- toolScroll:{paddingBottom:100},
- toolPage:{flex:1,alignItems:"center",justifyContent:"center",padding:30,backgroundColor:"#FFF",borderWidth:1,borderColor:"#E0E7E5",borderRadius:12,marginTop:20},
- toolTitle:{fontSize:25,fontWeight:"800",color:"#00695C",textAlign:"center"},
- toolHint:{fontSize:15,color:"#68736F",textAlign:"center",marginTop:12,lineHeight:22},
- toolSearch:{width:"100%",backgroundColor:"#FFFDF8",borderWidth:1,borderColor:"#B9CFC8",borderRadius:10,padding:13,fontSize:16,marginTop:16,textAlign:"right"},
  browserHeader:{height:54,flexDirection:"row",alignItems:"center",justifyContent:"space-between",paddingHorizontal:14,backgroundColor:"#FFF",borderBottomWidth:1,borderBottomColor:"#E1E7E5"},
  browserTitle:{fontSize:17,fontWeight:"800",color:"#172321"},
  browserBack:{paddingVertical:8,paddingHorizontal:8},
