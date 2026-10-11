@@ -51,31 +51,39 @@ jobs:
       - name: Generate Android native project
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Build installable debug APK
+      - name: Build standalone release APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
 
-      - name: Upload APK as a workflow artifact
+      - name: Verify JavaScript bundle is packaged in APK
+        run: |
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$APK"
+          unzip -Z1 "$APK" | grep -E '(^|/)index.android.bundle$'
+          echo "APK size:"
+          du -h "$APK"
+
+      - name: Upload release APK as a workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: EgyMeds-test-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: EgyMeds-standalone-test-APK
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish public download link for friend testing
+      - name: Publish standalone APK download link
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
         run: |
-          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          APK="android/app/build/outputs/apk/release/app-release.apk"
           TAG="egymeds-test-${RUN_NUMBER}"
           gh release create "$TAG" "$APK" \
             --repo "$REPO" \
             --target "$SHA" \
-            --title "EgyMeds Test APK #${RUN_NUMBER}" \
-            --notes "نسخة تجريبية للتثبيت اليدوي وإرسالها للمختبرين. ليست إصدار المتجر الرسمي.\n\nBuilt from commit ${SHA}."
+            --title "EgyMeds Standalone Test APK #${RUN_NUMBER}" \
+            --notes "نسخة اختبار مستقلة؛ ملف JavaScript مضمن داخل التطبيق ولا تحتاج إلى تشغيل Metro على الكمبيوتر. ليست إصدار المتجر الرسمي.\n\nBuilt from commit ${SHA}."
