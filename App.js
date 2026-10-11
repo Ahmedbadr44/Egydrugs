@@ -182,7 +182,7 @@ function EgyMedsApp() {
     searchResult.notice==="ingredient-english-only"?
     <View style={s.center}><Text style={s.status}>البحث بالمادة الفعالة متاح باللغة الإنجليزية فقط.</Text></View>:
     query.trim().length===0?
-    <View style={s.emptyHome}>{/* UI change: move the fixed ad placeholder below the empty-search prompt, away from the search controls. */}<Text style={s.emptyIcon}>⌕</Text><Text style={s.ready}>اكتب اسم الدواء للبحث</Text><Text style={s.status}>يمكنك البحث بالعربي أو بالإنجليزية</Text><View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>إعلان</Text></View></View>:
+    <View style={s.emptyHome}>{/* Keep the search prompt directly below the search box; let the ad occupy the remaining home-screen space. */}<Text style={s.emptyIcon}>⌕</Text><Text style={s.ready}>اكتب اسم الدواء للبحث</Text><Text style={s.status}>يمكنك البحث بالعربي أو بالإنجليزية</Text><View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>مساحة إعلانية</Text></View></View>:
     query.trim().length===1?
     <View style={s.center}><Text style={s.status}>أدخل حرفين على الأقل.</Text></View>:
     drugs.length===0?
@@ -307,8 +307,8 @@ const s=StyleSheet.create({
  modeButtonActive:{backgroundColor:"#00695C",borderColor:"#00695C"},
  modeText:{fontSize:15,color:"#455B55",fontWeight:"700"},
  modeTextActive:{fontSize:15,color:"#FFFFFF",fontWeight:"900"},
- // UI change: fixed-height reserved ad area keeps layout stable; omit when an ad slot is unavailable.
- adPlaceholder:{height:76,width:"100%",alignSelf:"stretch",marginTop:18,marginBottom:6,borderWidth:1,borderStyle:"dashed",borderColor:"#C7D3CC",borderRadius:10,backgroundColor:"#F1F1E8",alignItems:"center",justifyContent:"center"}, // UI change: keep a stable full-width ad slot with safe spacing below the prompt.
+ // Expand the ad area to use the available home-screen space below the search prompt.
+ adPlaceholder:{flex:1,minHeight:140,width:"100%",alignSelf:"stretch",marginTop:18,marginBottom:8,borderWidth:1,borderStyle:"dashed",borderColor:"#C7D3CC",borderRadius:10,backgroundColor:"#F1F1E8",alignItems:"center",justifyContent:"center"},
  adLabel:{fontSize:13,color:"#78837C",fontWeight:"700"},
  list:{paddingHorizontal:12,paddingTop:16,paddingBottom:115}, // UI change: extra top spacing keeps the first result clear of the fixed search area.
  card:{backgroundColor:"#FBFAF3",borderRadius:10,borderWidth:1,borderColor:"#ECE8DA",paddingVertical:11,paddingHorizontal:12,marginBottom:9,flexDirection:"row-reverse",elevation:1},
@@ -321,7 +321,7 @@ const s=StyleSheet.create({
  cardPrice:{fontSize:20,fontWeight:"900",color:"#267348",textAlign:"left",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
  cardOldPrice:{fontSize:13,color:"#858B87",textDecorationLine:"line-through",marginTop:3},
  center:{flex:1,alignItems:"center",justifyContent:"center",padding:30},
- emptyHome:{flex:1,alignItems:"center",justifyContent:"center",paddingHorizontal:16,paddingBottom:20}, // UI change: make room for the ad directly below the empty-search prompt.
+ emptyHome:{flex:1,alignItems:"center",justifyContent:"flex-start",paddingHorizontal:16,paddingTop:12,paddingBottom:52}, // Keep prompt near the search box and reserve the rest of the screen for the ad.
  emptyIcon:{fontSize:42,color:"#6D879B",marginBottom:8}, // UI change: reduce the search icon size to give the prompt a lighter visual weight.
  ready:{fontSize:18,fontWeight:"800",color:"#23303A"}, // UI change: reduce prompt text size while keeping it readable.
  status:{marginTop:8,color:"#64727C",textAlign:"center",fontSize:15,lineHeight:21},
