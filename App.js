@@ -249,7 +249,7 @@ function EgyMedsApp() {
           <Text style={sameStrength?s.eqChipTextActive:s.eqChipText}>نفس التركيز</Text>
          </Pressable>:null}
        </View>
-       {equivalents.length===0?<Text style={s.eqEmpty}>لا توجد أدوية بديلة مطابقة.</Text>:
+       {equivalents.length===0?<Text style={s.eqEmpty}>لا توجد مثائل مطابقة.</Text>:
         equivalents.map(item=><Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
          <View style={s.eqMain}><Text style={s.eqEn} numberOfLines={2}>{titleCase(item.nameEn)||"-"}</Text>{item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}<Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text></View>
          <Text style={s.eqPrice}>{price(item.price).replace(" EGP"," ج.م")}</Text>
