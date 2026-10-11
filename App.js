@@ -138,9 +138,12 @@ function EgyMedsApp() {
       autoCapitalize="none"
     />
     <View style={s.searchActions}>
-      <Pressable style={[s.modeButton,scope==="brand"&&s.modeButtonActive]} onPress={()=>setScope("brand")}><Text style={scope==="brand"?s.modeTextActive:s.modeText}>الدواء</Text></Pressable>
-      <Pressable style={[s.modeButton,scope==="ingredient"&&s.modeButtonActive]} onPress={()=>setScope("ingredient")}><Text style={scope==="ingredient"?s.modeTextActive:s.modeText}>المادة الفعالة</Text></Pressable>
+      {/* UI change: bordered segmented control with a high-contrast selected state. */}
+      <Pressable accessibilityRole="button" style={[s.modeButton,scope==="brand"&&s.modeButtonActive]} onPress={()=>setScope("brand")}><Text style={scope==="brand"?s.modeTextActive:s.modeText}>الدواء</Text></Pressable>
+      <Pressable accessibilityRole="button" style={[s.modeButton,scope==="ingredient"&&s.modeButtonActive]} onPress={()=>setScope("ingredient")}><Text style={scope==="ingredient"?s.modeTextActive:s.modeText}>المادة الفعالة</Text></Pressable>
     </View>
+    {/* UI change: fixed reserved ad area avoids layout jumps and leaves safe distance from search controls. */}
+    <View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>إعلان</Text></View>
    </View>
 
    {!loading && downloadProgress.initial ? (
@@ -186,7 +189,7 @@ function EgyMedsApp() {
     <View style={s.center}><Text style={s.status}>أدخل حرفين على الأقل.</Text></View>:
     drugs.length===0?
     <View style={s.center}><Text style={s.status}>لم يتم العثور على نتائج.</Text></View>:
-    <FlatList data={drugs} keyExtractor={x=>String(x.id)} renderItem={card} contentContainerStyle={s.list}/>
+    <FlatList data={drugs} keyExtractor={x=>String(x.id)} renderItem={card} contentContainerStyle={s.list} />
    }
   </View>
 
@@ -208,8 +211,10 @@ function EgyMedsApp() {
 
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
       <View style={s.heroCard}>
-       <Pressable style={s.imageSearchHero} onPress={openImageSearch}>
-        <Text style={s.imageSearchHeroTitle}>صورة الدواء</Text>
+       <Pressable style={s.imageSearchHero} onPress={openImageSearch} accessibilityRole="button" accessibilityLabel="البحث عن صورة الدواء">
+        {/* UI change: medicine icon gives the empty image area a useful fallback. */}
+        <Text style={s.medicineIcon}>💊</Text>
+        <Text style={s.imageSearchHeroTitle}>البحث عن صورة الدواء</Text>
        </Pressable>
        <View style={s.heroRow}>
         <View style={s.heroNameBlock}>
@@ -249,7 +254,7 @@ function EgyMedsApp() {
        </View>
        {equivalents.length===0?<Text style={s.eqEmpty}>لا توجد أدوية بديلة مطابقة.</Text>:
         equivalents.map(item=><Pressable key={String(item.id)} style={s.eqCard} onPress={()=>openDrug(item)}>
-         <View style={s.eqMain}><Text style={s.eqEn} numberOfLines={2}>{item.nameEn||"-"}</Text>{item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}<Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text></View>
+         <View style={s.eqMain}><Text style={s.eqEn} numberOfLines={2}>{titleCase(item.nameEn)||"-"}</Text>{item.nameAr?<Text style={s.eqAr} numberOfLines={2}>{item.nameAr}</Text>:null}<Text style={s.eqCo} numberOfLines={1}>{item.manufacturer||"-"}</Text></View>
          <Text style={s.eqPrice}>{price(item.price).replace(" EGP"," ج.م")}</Text>
         </Pressable>)
        }
@@ -310,6 +315,7 @@ function EgyMedsApp() {
 function hasStrength(name){return /\d+(?:\.\d+)?\s*(?:MG|MCG|UG|GM|G|IU)(?![A-Z])|\d+(?:\.\d+)?\s*%/i.test(String(name||""));}
 function hasDosageForm(name){return dosageFormOf(name)!=="unknown";}
 function Info({l,v}){
+ // UI change: keep long values readable and wrapping safely in the RTL information table.
  const displayValue=String(v||"-").replace(/([.+/()><,-])/g,"$1\u200B");
  return <View style={s.info}>
   <Text style={s.label}>{l}</Text>
@@ -328,11 +334,14 @@ const s=StyleSheet.create({
  searchShell:{marginHorizontal:16,marginTop:14,backgroundColor:"#FFFDF8",borderWidth:2,borderColor:"#56A79E",borderRadius:11,paddingHorizontal:13,paddingTop:7,paddingBottom:10,elevation:2},
  searchLabel:{position:"absolute",top:-13,left:14,backgroundColor:"#F7F5ED",paddingHorizontal:7,color:"#23443D",fontSize:19,fontWeight:"800"},
  search:{backgroundColor:"#FFFDF8",paddingVertical:12,paddingHorizontal:7,fontSize:20,textAlign:"right",color:"#22302D"},
- searchActions:{flexDirection:"row-reverse",gap:8,marginTop:4},
- modeButton:{borderWidth:1,borderColor:"#D0D9DF",borderRadius:18,paddingHorizontal:13,paddingVertical:7,backgroundColor:"#FFF"},
- modeButtonActive:{backgroundColor:"#E1F1EC",borderColor:"#56A79E"},
- modeText:{fontSize:14,color:"#65727D"},
- modeTextActive:{fontSize:14,color:"#00695C",fontWeight:"800"},
+ searchActions:{flexDirection:"row-reverse",gap:0,marginTop:8,borderWidth:1,borderColor:"#5A9C91",borderRadius:12,overflow:"hidden"},
+ modeButton:{flex:1,minHeight:44,alignItems:"center",justifyContent:"center",borderWidth:1,borderColor:"#B9D0CA",paddingHorizontal:13,paddingVertical:9,backgroundColor:"#FFF"},
+ modeButtonActive:{backgroundColor:"#00695C",borderColor:"#00695C"},
+ modeText:{fontSize:15,color:"#455B55",fontWeight:"700"},
+ modeTextActive:{fontSize:15,color:"#FFFFFF",fontWeight:"900"},
+ // UI change: fixed-height reserved ad area keeps layout stable; omit when an ad slot is unavailable.
+ adPlaceholder:{height:76,marginTop:16,marginBottom:6,borderWidth:1,borderStyle:"dashed",borderColor:"#C7D3CC",borderRadius:10,backgroundColor:"#F1F1E8",alignItems:"center",justifyContent:"center"},
+ adLabel:{fontSize:13,color:"#78837C",fontWeight:"700"},
  list:{paddingHorizontal:12,paddingTop:16,paddingBottom:115}, // UI change: extra top spacing keeps the first result clear of the fixed search area.
  card:{backgroundColor:"#FBFAF3",borderRadius:10,borderWidth:1,borderColor:"#ECE8DA",paddingVertical:11,paddingHorizontal:12,marginBottom:9,flexDirection:"row-reverse",elevation:1},
  cardMain:{flex:1,minWidth:0,paddingLeft:9,alignItems:"flex-start"},
@@ -391,7 +400,7 @@ errorText:{color:"#4A555C",textAlign:"center"},
  sectionTitle:{color:"#00695C",fontSize:22,fontWeight:"900",textAlign:"right",paddingHorizontal:18,paddingVertical:15},
  info:{borderTopWidth:1,borderTopColor:"#E5E9E6",paddingHorizontal:16,paddingVertical:14,flexDirection:"row",alignItems:"flex-start",justifyContent:"space-between",minHeight:58},
  label:{width:"36%",fontSize:15,color:"#6C7774",textAlign:"right",fontWeight:"700",lineHeight:21,includeFontPadding:false},
- value:{flex:1,marginLeft:16,fontSize:15,color:"#2F3E3A",textAlign:"left",lineHeight:22,includeFontPadding:false,flexShrink:1},
+ value:{flex:1,marginRight:16,fontSize:15,color:"#2F3E3A",textAlign:"right",lineHeight:22,includeFontPadding:false,flexShrink:1}, // UI change: Arabic values align right with their labels.
  eqSection:{backgroundColor:"#FFF",borderRadius:18,marginTop:14,padding:14,elevation:2},
  eqTitle:{fontSize:22,fontWeight:"900",color:"#00695C",textAlign:"right"},
  eqHint:{fontSize:12,color:"#7A8582",textAlign:"right",marginTop:3},
