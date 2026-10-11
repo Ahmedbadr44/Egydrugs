@@ -182,8 +182,7 @@ function EgyMedsApp() {
     searchResult.notice==="ingredient-english-only"?
     <View style={s.center}><Text style={s.status}>البحث بالمادة الفعالة متاح باللغة الإنجليزية فقط.</Text></View>:
     query.trim().length===0?
-    {/* UI change: move the fixed ad placeholder below the empty-search prompt, away from the search controls. */}
-    <View style={s.emptyHome}><Text style={s.emptyIcon}>⌕</Text><Text style={s.ready}>اكتب اسم الدواء للبحث</Text><Text style={s.status}>يمكنك البحث بالعربي أو بالإنجليزية</Text><View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>إعلان</Text></View></View>:
+    <View style={s.emptyHome}>{/* UI change: move the fixed ad placeholder below the empty-search prompt, away from the search controls. */}<Text style={s.emptyIcon}>⌕</Text><Text style={s.ready}>اكتب اسم الدواء للبحث</Text><Text style={s.status}>يمكنك البحث بالعربي أو بالإنجليزية</Text><View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>إعلان</Text></View></View>:
     query.trim().length===1?
     <View style={s.center}><Text style={s.status}>أدخل حرفين على الأقل.</Text></View>:
     drugs.length===0?
