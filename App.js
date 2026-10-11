@@ -15,9 +15,9 @@ I18nManager.allowRTL(true);
 const PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
 // UI-only formatter: present English names in Title Case without changing stored data.
-const titleCase=v=>String(v||"").toLowerCase().replace(/(^|[\\s(/-])([a-z])/g,(_,p,l)=>p+l.toUpperCase());
+const titleCase=v=>String(v||"").toLowerCase().replace(/(^|[\s(/-])([a-z])/g,(_,p,l)=>p+l.toUpperCase());
 // UI-only formatter: turn dot-separated descriptions into readable comma-separated text.
-const formatDescription=v=>String(v||"").replace(/\\s*\\.\\s*/g,", ").replace(/\\s*,\\s*/g,", ").replace(/\\s{2,}/g," ").replace(/^,|,$/g,"").trim();
+const formatDescription=v=>String(v||"").replace(/\s*\.\s*/g,", ").replace(/\s*,\s*/g,", ").replace(/\s{2,}/g," ").replace(/^,|,$/g,"").trim();
 
 
 export default function App() {
@@ -144,7 +144,6 @@ function EgyMedsApp() {
     </View>
     {/* UI change: fixed reserved ad area avoids layout jumps and leaves safe distance from search controls. */}
     <View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>إعلان</Text></View>
-   </View>
 
    {!loading && downloadProgress.initial ? (
     <View style={s.inlineProgress}>
@@ -230,13 +229,13 @@ function EgyMedsApp() {
       </View>
 
       <View style={s.infoCard}>
-       <Text style={s.sectionTitle}>Drug Information</Text>
-       <Info l="Active Ingredient" v={selected.ingredient}/>
-       <Info l="Manufacturer" v={selected.manufacturer}/>
-       <Info l="Description" v={selected.description}/>
-       {selected.productType?<Info l="Product Type" v={String(selected.productType).toUpperCase()}/>:null}
-       <Info l="Price" v={price(selected.price)}/>
-       <Info l="Last Price Update" v={selected.priceUpdatedAt ? new Date(selected.priceUpdatedAt).toLocaleDateString("en-GB") : "غير مسجل"}/>
+       <Text style={s.sectionTitle}>معلومات الدواء</Text>
+       <Info l="المادة الفعالة" v={selected.ingredient}/>
+       <Info l="الشركة المصنعة" v={selected.manufacturer}/>
+       <Info l="الوصف" v={formatDescription(selected.description)}/>
+       {selected.productType?<Info l="نوع المنتج" v={String(selected.productType).toUpperCase()}/>:null}
+       {/* UI change: price is already shown above, so the duplicate table row is removed. */}
+       {selected.priceUpdatedAt && String(selected.priceUpdatedAt).trim() && String(selected.priceUpdatedAt).trim()!=="غير مسجل" ? <Info l="آخر تحديث للسعر" v={new Date(selected.priceUpdatedAt).toLocaleDateString("en-GB")}/> : null}
       </View>
 
 
@@ -387,7 +386,9 @@ errorText:{color:"#4A555C",textAlign:"center"},
  detailScroll:{padding:12,paddingBottom:100},
  heroCard:{backgroundColor:"#FFF",borderRadius:18,padding:14,elevation:4,shadowColor:"#000",shadowOpacity:.1,shadowRadius:8,shadowOffset:{width:0,height:4}},
  imageSearchHero:{minHeight:190,alignItems:"center",justifyContent:"center",backgroundColor:"#F3F8F6",borderWidth:2,borderColor:"#79B9AE",borderRadius:16,paddingHorizontal:18,paddingVertical:20},
- imageSearchHeroTitle:{fontSize:18,fontWeight:"900",color:"#06463F",textAlign:"center"},\n // UI change: icon is a visual fallback when a drug image is not available.\n medicineIcon:{fontSize:42,marginBottom:8},
+ imageSearchHeroTitle:{fontSize:18,fontWeight:"900",color:"#06463F",textAlign:"center"},
+ // UI change: icon is a visual fallback when a drug image is not available.
+ medicineIcon:{fontSize:42,marginBottom:8},
   heroRow:{flexDirection:"row-reverse",alignItems:"flex-start",justifyContent:"space-between",marginTop:14,gap:8},
  heroNameBlock:{flex:1,alignItems:"flex-start"},
  heroNameEn:{fontSize:23,fontWeight:"900",color:"#2473AF",textAlign:"left"},
