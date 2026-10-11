@@ -144,6 +144,7 @@ function EgyMedsApp() {
     </View>
     {/* UI change: fixed reserved ad area avoids layout jumps and leaves safe distance from search controls. */}
     <View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>إعلان</Text></View>
+   </View>
 
    {!loading && downloadProgress.initial ? (
     <View style={s.inlineProgress}>
