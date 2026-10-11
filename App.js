@@ -33,7 +33,7 @@ export default function App() {
 
 function EgyMedsApp() {
  const db = useSQLiteContext();
- const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[favorite,setFavorite]=useState(false),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
+ const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
  const[downloadProgress,setDownloadProgress]=useState({loaded:0,total:0,initial:false,complete:false,failed:false});
  const progressPercent=downloadProgress.total>0?Math.min(100,Math.round(downloadProgress.loaded/downloadProgress.total*100)):0;
 
@@ -98,7 +98,7 @@ function EgyMedsApp() {
    :"ابحث باسم الدواء بالعربي أو بالإنجليزية";
 
  const openDrug=item=>{
-  setSameRoute(false);setSameStrength(false);setFavorite(false);setSelected(item);
+  setSameRoute(false);setSameStrength(false);setSelected(item);
 };
  const openImageSearch=()=>{if(!selected)return;const q=[selected.nameEn,selected.nameAr,selected.manufacturer,selected.ingredient].filter(Boolean).join(" ");setImageUrl("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q));};
  const card=({item})=><Pressable style={s.card} onPress={()=>openDrug(item)}>
@@ -129,7 +129,8 @@ function EgyMedsApp() {
 
    <View style={s.searchShell}>
     <Text style={s.searchLabel}>{scope==="brand"?"اسم الدواء":"المادة الفعالة"}</Text>
-    <TextInput
+    <View style={s.searchInputRow}>
+     <TextInput
       value={query}
       onChangeText={setQuery}
       placeholder={scope==="ingredient"?"ابحث عن المادة الفعالة بالإنجليزية":"ابحث باسم الدواء بالعربي أو بالإنجليزية"}
@@ -137,7 +138,17 @@ function EgyMedsApp() {
       style={s.search}
       autoCorrect={false}
       autoCapitalize="none"
-    />
+      accessibilityLabel={scope==="ingredient"?"البحث بالمادة الفعالة":"البحث باسم الدواء"}
+     />
+     {query.length>0?<Pressable
+      testID="clear-search-button"
+      accessibilityRole="button"
+      accessibilityLabel="مسح نص البحث"
+      hitSlop={8}
+      style={s.clearSearchButton}
+      onPress={()=>setQuery("")}
+     ><Text style={s.clearSearchText}>×</Text></Pressable>:null}
+    </View>
     <View style={s.searchActions}>
       {/* UI change: bordered segmented control with a high-contrast selected state. */}
       <Pressable accessibilityRole="button" style={[s.modeButton,scope==="brand"&&s.modeButtonActive]} onPress={()=>setScope("brand")}><Text style={scope==="brand"?s.modeTextActive:s.modeText}>الدواء</Text></Pressable>
@@ -183,7 +194,7 @@ function EgyMedsApp() {
     searchResult.notice==="ingredient-english-only"?
     <View style={s.center}><Text style={s.status}>البحث بالمادة الفعالة متاح باللغة الإنجليزية فقط.</Text></View>:
     query.trim().length===0?
-    <View style={s.emptyHome}>{/* Keep the search prompt directly below the search box; let the ad occupy the remaining home-screen space. */}<Text style={s.emptyIcon}>⌕</Text><Text style={s.ready}>اكتب اسم الدواء للبحث</Text><Text style={s.status}>يمكنك البحث بالعربي أو بالإنجليزية</Text><View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>مساحة إعلانية</Text></View></View>:
+    <View style={s.emptyHome}><View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>مساحة إعلانية</Text></View></View>:
     query.trim().length===1?
     <View style={s.center}><Text style={s.status}>أدخل حرفين على الأقل.</Text></View>:
     drugs.length===0?
@@ -205,7 +216,7 @@ function EgyMedsApp() {
      <View style={s.detailHeader}>
       <Pressable style={s.detailHeaderIcon} onPress={()=>setSelected(null)}><Text style={s.backIcon}>‹</Text></Pressable>
       <Text style={s.detailHeaderTitle}>تفاصيل الدواء</Text>
-      <Pressable style={s.detailHeaderIcon} onPress={()=>setFavorite(v=>!v)}><Text style={[s.heartIcon,favorite&&s.heartActive]}>{favorite?"♥":"♡"}</Text></Pressable>
+      <View style={s.detailHeaderIcon}/>
      </View>
 
      {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
@@ -303,14 +314,17 @@ const s=StyleSheet.create({
  headerIconText:{fontSize:31,color:"#FFF",fontWeight:"700"},
  searchShell:{marginHorizontal:16,marginTop:14,backgroundColor:"#FFFDF8",borderWidth:2,borderColor:"#56A79E",borderRadius:11,paddingHorizontal:13,paddingTop:7,paddingBottom:10,elevation:2},
  searchLabel:{position:"absolute",top:-13,left:14,backgroundColor:"#F7F5ED",paddingHorizontal:7,color:"#23443D",fontSize:19,fontWeight:"800"},
- search:{backgroundColor:"#FFFDF8",paddingVertical:12,paddingHorizontal:7,fontSize:20,textAlign:"right",color:"#22302D"},
+ searchInputRow:{flexDirection:"row-reverse",alignItems:"center",minHeight:50},
+ search:{flex:1,backgroundColor:"#FFFDF8",paddingVertical:12,paddingHorizontal:7,fontSize:20,textAlign:"right",color:"#22302D"},
+ clearSearchButton:{width:36,height:36,alignItems:"center",justifyContent:"center",borderRadius:18,backgroundColor:"#E5F1ED",marginLeft:4},
+ clearSearchText:{fontSize:26,fontWeight:"700",color:"#00695C",lineHeight:28},
  searchActions:{flexDirection:"row-reverse",gap:0,marginTop:8,borderWidth:1,borderColor:"#5A9C91",borderRadius:12,overflow:"hidden"},
  modeButton:{flex:1,minHeight:44,alignItems:"center",justifyContent:"center",borderWidth:1,borderColor:"#B9D0CA",paddingHorizontal:13,paddingVertical:9,backgroundColor:"#FFF"},
  modeButtonActive:{backgroundColor:"#00695C",borderColor:"#00695C"},
  modeText:{fontSize:15,color:"#455B55",fontWeight:"700"},
  modeTextActive:{fontSize:15,color:"#FFFFFF",fontWeight:"900"},
- // Expand the ad area to use the available home-screen space below the search prompt.
- adPlaceholder:{flex:1,minHeight:140,width:"100%",alignSelf:"stretch",marginTop:18,marginBottom:8,borderWidth:1,borderStyle:"dashed",borderColor:"#C7D3CC",borderRadius:10,backgroundColor:"#F1F1E8",alignItems:"center",justifyContent:"center"},
+ // Use the full space below the search controls for the ad placeholder.
+ adPlaceholder:{flex:1,minHeight:220,width:"100%",alignSelf:"stretch",marginTop:8,marginBottom:8,borderWidth:1,borderStyle:"dashed",borderColor:"#C7D3CC",borderRadius:10,backgroundColor:"#F1F1E8",alignItems:"center",justifyContent:"center"},
  adLabel:{fontSize:13,color:"#78837C",fontWeight:"700"},
  list:{paddingHorizontal:12,paddingTop:16,paddingBottom:115}, // UI change: extra top spacing keeps the first result clear of the fixed search area.
  card:{backgroundColor:"#FBFAF3",borderRadius:10,borderWidth:1,borderColor:"#ECE8DA",paddingVertical:11,paddingHorizontal:12,marginBottom:9,flexDirection:"row-reverse",elevation:1},
@@ -323,9 +337,7 @@ const s=StyleSheet.create({
  cardPrice:{fontSize:20,fontWeight:"900",color:"#267348",textAlign:"left",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
  cardOldPrice:{fontSize:13,color:"#858B87",textDecorationLine:"line-through",marginTop:3},
  center:{flex:1,alignItems:"center",justifyContent:"center",padding:30},
- emptyHome:{flex:1,alignItems:"center",justifyContent:"flex-start",paddingHorizontal:16,paddingTop:12,paddingBottom:52}, // Keep prompt near the search box and reserve the rest of the screen for the ad.
- emptyIcon:{fontSize:42,color:"#6D879B",marginBottom:8}, // UI change: reduce the search icon size to give the prompt a lighter visual weight.
- ready:{fontSize:18,fontWeight:"800",color:"#23303A"}, // UI change: reduce prompt text size while keeping it readable.
+ emptyHome:{flex:1,alignItems:"stretch",justifyContent:"flex-start",paddingHorizontal:16,paddingTop:8,paddingBottom:40},
  status:{marginTop:8,color:"#64727C",textAlign:"center",fontSize:15,lineHeight:21},
  progressCount:{marginTop:12,color:"#00695C",textAlign:"center",fontSize:15,fontWeight:"800"},
 progressTrack:{width:"100%",maxWidth:360,height:10,backgroundColor:"#D8E4E0",borderRadius:8,overflow:"hidden",marginTop:14},
@@ -342,12 +354,11 @@ errorText:{color:"#4A555C",textAlign:"center"},
  callLabel:{color:"#2E5A52",fontWeight:"600",fontSize:12},
  call:{color:"#2E5A52",fontWeight:"700",fontSize:12},
  detailScreen:{flex:1,backgroundColor:"#F7F5ED"},
- detailHeader:{height:72,backgroundColor:"#00695C",flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:12}, // UI change: back control sits on the RTL right; favorite sits on the left.
+ detailHeader:{height:72,backgroundColor:"#00695C",flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:12},
  detailHeaderIcon:{width:48,height:48,alignItems:"center",justifyContent:"center"},
  backIcon:{fontSize:47,color:"#FFF",fontWeight:"300",lineHeight:47},
  detailHeaderTitle:{fontSize:23,fontWeight:"900",color:"#FFF"},
- heartIcon:{fontSize:40,color:"#FFF",lineHeight:42},
- heartActive:{color:"#FFF100"},
+
  detailScroll:{padding:12,paddingBottom:100,gap:0},
  heroCard:{backgroundColor:"#FFF",borderRadius:18,padding:14,borderWidth:1,borderColor:"#E8EDE9",elevation:2,shadowColor:"#000",shadowOpacity:.06,shadowRadius:5,shadowOffset:{width:0,height:2}},
  imageSearchHero:{minHeight:112,alignItems:"center",justifyContent:"center",backgroundColor:"#F3F8F6",borderWidth:2,borderColor:"#79B9AE",borderRadius:16,paddingHorizontal:18,paddingVertical:20},
