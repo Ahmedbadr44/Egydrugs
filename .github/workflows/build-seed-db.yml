@@ -58,4 +58,5 @@ jobs:
             exit 0
           fi
           git commit -m "Bundle latest Supabase drug database"
+          git pull --rebase origin react-native
           git push origin HEAD:react-native
