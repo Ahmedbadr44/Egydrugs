@@ -4,8 +4,8 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
 const baseUrl = process.env.SUPABASE_URL;
-const anonKey = process.env.SUPABASE_ANON_KEY;
-if (!baseUrl || !anonKey) throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
+const apiKey = process.env.SUPABASE_API_KEY;
+if (!baseUrl || !apiKey) throw new Error("Missing SUPABASE_URL or SUPABASE_API_KEY");
 
 const columns = [
   "id", "commercial_name_en", "commercial_name_ar", "scientific_name",
@@ -20,8 +20,7 @@ const allRows = [];
 for (let offset = 0; ; offset += pageSize) {
   const response = await fetch(endpoint, {
     headers: {
-      apikey: anonKey,
-      Authorization: `Bearer ${anonKey}`,
+      apikey: apiKey,
       Range: `${offset}-${offset + pageSize - 1}`,
       Prefer: "count=exact"
     }
