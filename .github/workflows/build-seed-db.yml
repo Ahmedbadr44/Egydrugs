@@ -1,0 +1,61 @@
+name: Build bundled drug database
+
+on:
+  push:
+    branches:
+      - react-native
+    paths:
+      - App.js
+      - build_seed_db.py
+      - src/lib/supabase.js
+      - .github/workflows/build-seed-db.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-seed-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out React Native branch
+        uses: actions/checkout@v4
+        with:
+          ref: react-native
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build and verify the latest SQLite database from Supabase
+        run: |
+          python build_seed_db.py
+          python - <<'PY'
+          import sqlite3
+          from pathlib import Path
+
+          path = Path("assets/egymeds-seed.db")
+          if not path.exists() or path.stat().st_size == 0:
+              raise SystemExit("Bundled database asset is missing or empty.")
+          db = sqlite3.connect(path)
+          integrity = db.execute("PRAGMA integrity_check").fetchone()[0]
+          count = db.execute("SELECT COUNT(*) FROM drugs_cache").fetchone()[0]
+          db.close()
+          if integrity != "ok" or count < 1:
+              raise SystemExit(f"Database validation failed: integrity={integrity}, rows={count}")
+          print(f"Verified {count:,} drugs; database size {path.stat().st_size:,} bytes.")
+          PY
+
+      - name: Commit the refreshed bundled database
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/egymeds-seed.db
+          if git diff --cached --quiet; then
+            echo "Bundled database is already up to date."
+            exit 0
+          fi
+          git commit -m "Bundle latest Supabase drug database"
+          git push origin HEAD:react-native
