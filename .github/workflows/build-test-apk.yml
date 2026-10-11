@@ -1,17 +1,6 @@
 name: Build and publish test APK
 
 on:
-  push:
-    branches: [react-native]
-    paths:
-      - App.js
-      - app.json
-      - package.json
-      - src/**
-      - assets/egymeds-seed.db
-      - metro.config.js
-      - babel.config.js
-      - .github/workflows/build-test-apk.yml
   workflow_dispatch:
 
 permissions:
