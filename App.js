@@ -192,6 +192,7 @@ function EgyMedsApp() {
   </View>
 
   <View style={s.bottom}>
+   <Text style={s.callLabel}>للتواصل والإعلان</Text>
    <Pressable onPress={()=>Linking.openURL("tel:"+PHONE)}>
     <Text style={s.call}>{PHONE}</Text>
    </Pressable>
@@ -335,8 +336,9 @@ errorText:{color:"#4A555C",textAlign:"center"},
  err:{fontSize:18,fontWeight:"700",color:"#B22C27",marginBottom:8},
  retry:{marginTop:16,backgroundColor:"#00695C",borderRadius:10,paddingVertical:11,paddingHorizontal:22},
  retryText:{color:"#FFF",fontWeight:"800"},
- bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#DCE8DE",borderTopWidth:1,borderTopColor:"#C9D9CD",paddingVertical:4,alignItems:"center"},
+ bottom:{position:"absolute",left:0,right:0,bottom:0,backgroundColor:"#DCE8DE",borderTopWidth:1,borderTopColor:"#C9D9CD",paddingVertical:4,alignItems:"center",flexDirection:"row-reverse",justifyContent:"center",gap:8},
  author:{marginTop:2,color:"#4A555C",fontSize:12,fontWeight:"700"},
+ callLabel:{color:"#2E5A52",fontWeight:"600",fontSize:12},
  call:{color:"#2E5A52",fontWeight:"700",fontSize:12},
  detailScreen:{flex:1,backgroundColor:"#F7F5ED"},
  detailHeader:{height:72,backgroundColor:"#00695C",flexDirection:"row-reverse",alignItems:"center",justifyContent:"space-between",paddingHorizontal:12}, // UI change: back control sits on the RTL right; favorite sits on the left.
