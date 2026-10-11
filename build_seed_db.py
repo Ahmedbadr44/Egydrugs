@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the SQLite database bundled with EgyMeds from the current Supabase drugs table.
+"""Build the offline starter SQLite database bundled inside the EgyMeds app from Supabase.
 
 Run on the developer machine before testing or creating a store release:
     py -3 build_seed_db.py
