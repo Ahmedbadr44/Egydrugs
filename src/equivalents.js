@@ -90,9 +90,28 @@ export function dosageFormOf(name=""){
  return "unknown";
 }
 
-export function getEquivalents(rows,selected,{sameRoute=false,sameStrength=false}={}){
+/**
+ * Build once when the cached medicine list changes. Opening a drug then looks up
+ * only medicines sharing its normalized ingredient instead of scanning all 26k rows.
+ */
+export function buildEquivalentsIndex(rows){
+ const index=new Map();
+ for(const row of rows){
+  const ing=ingredientKey(row.scientific_name||row.ingredient||"");
+  if(!ing) continue;
+  let group=index.get(ing);
+  if(!group){group=[];index.set(ing,group);}
+  group.push(row);
+ }
+ return index;
+}
+
+export function getEquivalents(rowsOrIndex,selected,{sameRoute=false,sameStrength=false}={}){
  const selectedIng=ingredientKey(selected?.scientific_name||selected?.ingredient||"");
  if(!selectedIng) return [];
+ const rows=rowsOrIndex instanceof Map
+  ? (rowsOrIndex.get(selectedIng)||[])
+  : rowsOrIndex;
  const selectedStrength=strengthOf(selected?.commercial_name_en||selected?.nameEn||"");
  const selectedType=String(selected?.product_type||selected?.productType||"").trim().toUpperCase();
  return rows
