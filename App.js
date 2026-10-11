@@ -9,7 +9,7 @@ import {
   syncDrugs,
 } from "./src/lib/drugsCache";
 import{useDrugSearch}from"./src/search/useDrugSearch";
-import{getEquivalents,dosageFormOf}from"./src/equivalents";
+import{getEquivalents,buildEquivalentsIndex,dosageFormOf}from"./src/equivalents";
 I18nManager.allowRTL(true);
 const PHONE="01030950177";
 const price=v=>v==null?"N/A":(Number.isInteger(Number(v))?v:Number(v).toFixed(2))+" EGP";
@@ -91,7 +91,8 @@ function EgyMedsApp() {
  const drugs=useMemo(()=>searchResult.hits.map(h=>h.item),[searchResult.hits]);
  const [sameRoute,setSameRoute]=useState(false);
  const [sameStrength,setSameStrength]=useState(false);
- const equivalents=useMemo(()=>selected?getEquivalents(medicines,selected,{sameRoute,sameStrength}):[],[medicines,selected,sameRoute,sameStrength]);
+ const equivalentsIndex=useMemo(()=>buildEquivalentsIndex(medicines),[medicines]);
+ const equivalents=useMemo(()=>selected?getEquivalents(equivalentsIndex,selected,{sameRoute,sameStrength}):[],[equivalentsIndex,selected,sameRoute,sameStrength]);
 
  const placeholder=scope==="ingredient"
    ?"ابحث بالمادة الفعالة بالإنجليزية"
