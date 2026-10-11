@@ -142,8 +142,6 @@ function EgyMedsApp() {
       <Pressable accessibilityRole="button" style={[s.modeButton,scope==="brand"&&s.modeButtonActive]} onPress={()=>setScope("brand")}><Text style={scope==="brand"?s.modeTextActive:s.modeText}>الدواء</Text></Pressable>
       <Pressable accessibilityRole="button" style={[s.modeButton,scope==="ingredient"&&s.modeButtonActive]} onPress={()=>setScope("ingredient")}><Text style={scope==="ingredient"?s.modeTextActive:s.modeText}>المادة الفعالة</Text></Pressable>
     </View>
-    {/* UI change: fixed reserved ad area avoids layout jumps and leaves safe distance from search controls. */}
-    <View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>إعلان</Text></View>
    </View>
 
    {!loading && downloadProgress.initial ? (
@@ -184,7 +182,8 @@ function EgyMedsApp() {
     searchResult.notice==="ingredient-english-only"?
     <View style={s.center}><Text style={s.status}>البحث بالمادة الفعالة متاح باللغة الإنجليزية فقط.</Text></View>:
     query.trim().length===0?
-    <View style={s.emptyHome}><Text style={s.emptyIcon}>⌕</Text><Text style={s.ready}>اكتب اسم الدواء للبحث</Text><Text style={s.status}>يمكنك البحث بالعربي أو بالإنجليزية</Text></View>:
+    {/* UI change: move the fixed ad placeholder below the empty-search prompt, away from the search controls. */}
+    <View style={s.emptyHome}><Text style={s.emptyIcon}>⌕</Text><Text style={s.ready}>اكتب اسم الدواء للبحث</Text><Text style={s.status}>يمكنك البحث بالعربي أو بالإنجليزية</Text><View style={s.adPlaceholder} accessibilityLabel="مساحة إعلان"><Text style={s.adLabel}>إعلان</Text></View></View>:
     query.trim().length===1?
     <View style={s.center}><Text style={s.status}>أدخل حرفين على الأقل.</Text></View>:
     drugs.length===0?
@@ -340,7 +339,7 @@ const s=StyleSheet.create({
  modeText:{fontSize:15,color:"#455B55",fontWeight:"700"},
  modeTextActive:{fontSize:15,color:"#FFFFFF",fontWeight:"900"},
  // UI change: fixed-height reserved ad area keeps layout stable; omit when an ad slot is unavailable.
- adPlaceholder:{height:76,marginTop:16,marginBottom:6,borderWidth:1,borderStyle:"dashed",borderColor:"#C7D3CC",borderRadius:10,backgroundColor:"#F1F1E8",alignItems:"center",justifyContent:"center"},
+ adPlaceholder:{height:76,width:"100%",alignSelf:"stretch",marginTop:18,marginBottom:6,borderWidth:1,borderStyle:"dashed",borderColor:"#C7D3CC",borderRadius:10,backgroundColor:"#F1F1E8",alignItems:"center",justifyContent:"center"}, // UI change: keep a stable full-width ad slot with safe spacing below the prompt.
  adLabel:{fontSize:13,color:"#78837C",fontWeight:"700"},
  list:{paddingHorizontal:12,paddingTop:16,paddingBottom:115}, // UI change: extra top spacing keeps the first result clear of the fixed search area.
  card:{backgroundColor:"#FBFAF3",borderRadius:10,borderWidth:1,borderColor:"#ECE8DA",paddingVertical:11,paddingHorizontal:12,marginBottom:9,flexDirection:"row-reverse",elevation:1},
@@ -353,9 +352,9 @@ const s=StyleSheet.create({
  cardPrice:{fontSize:20,fontWeight:"900",color:"#267348",textAlign:"left",textBreakStrategy:"simple",android_hyphenationFrequency:"none"},
  cardOldPrice:{fontSize:13,color:"#858B87",textDecorationLine:"line-through",marginTop:3},
  center:{flex:1,alignItems:"center",justifyContent:"center",padding:30},
- emptyHome:{flex:1,alignItems:"center",justifyContent:"center",paddingBottom:120},
- emptyIcon:{fontSize:58,color:"#6D879B",marginBottom:10},
- ready:{fontSize:22,fontWeight:"800",color:"#23303A"},
+ emptyHome:{flex:1,alignItems:"center",justifyContent:"center",paddingHorizontal:16,paddingBottom:20}, // UI change: make room for the ad directly below the empty-search prompt.
+ emptyIcon:{fontSize:42,color:"#6D879B",marginBottom:8}, // UI change: reduce the search icon size to give the prompt a lighter visual weight.
+ ready:{fontSize:18,fontWeight:"800",color:"#23303A"}, // UI change: reduce prompt text size while keeping it readable.
  status:{marginTop:8,color:"#64727C",textAlign:"center",fontSize:15,lineHeight:21},
  progressCount:{marginTop:12,color:"#00695C",textAlign:"center",fontSize:15,fontWeight:"800"},
 progressTrack:{width:"100%",maxWidth:360,height:10,backgroundColor:"#D8E4E0",borderRadius:8,overflow:"hidden",marginTop:14},
