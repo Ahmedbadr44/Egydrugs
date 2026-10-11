@@ -33,6 +33,7 @@ export default function App() {
 
 function EgyMedsApp() {
  const db = useSQLiteContext();
+ const [hasStarted, setHasStarted] = useState(false);
  const[query,setQuery]=useState(""),[scope,setScope]=useState("brand"),[medicines,setMedicines]=useState([]),[selected,setSelected]=useState(null),[imageUrl,setImageUrl]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
  const[downloadProgress,setDownloadProgress]=useState({loaded:0,total:0,initial:false,complete:false,failed:false});
  const progressPercent=downloadProgress.total>0?Math.min(100,Math.round(downloadProgress.loaded/downloadProgress.total*100)):0;
@@ -115,6 +116,80 @@ function EgyMedsApp() {
   </View>
  </Pressable>;
 
+
+ if (!hasStarted) {
+  return (
+   <SafeAreaView style={s.introSafe}>
+    <StatusBar barStyle="light-content" backgroundColor="#00574F" />
+    <View style={s.introRoot}>
+     <View style={s.introHeader}>
+      <View style={s.introBrandRow}>
+       <View style={s.introLogo}>
+        <Text style={s.introLogoMark}>✚</Text>
+       </View>
+       <Text style={s.introBrand}>EgyMeds</Text>
+      </View>
+      <Text style={s.introEyebrow}>دليلك للأدوية المصرية</Text>
+      <Text style={s.introHeaderCopy}>اعرف دواءك… واكتشف مثائله بسهولة</Text>
+     </View>
+
+     <ScrollView
+      style={s.introAdScroll}
+      contentContainerStyle={s.introAdScrollContent}
+      showsVerticalScrollIndicator={false}
+     >
+      {/* Promotional placeholder: this area can be replaced by a real ad later. */}
+      <View style={s.introPromoCard}>
+       <View style={s.introPromoTopRow}>
+        <View style={s.introPromoBadge}>
+         <Text style={s.introPromoBadgeText}>اكتشف التطبيق</Text>
+        </View>
+        <Text style={s.introPromoOverline}>EgyMeds</Text>
+       </View>
+       <View style={s.introPillIllustration}>
+        <Text style={s.introPillEmoji}>💊</Text>
+        <View style={s.introOrbitOne} />
+        <View style={s.introOrbitTwo} />
+       </View>
+       <Text style={s.introPromoTitle}>كل الأدوية ومثائلها في مكان واحد</Text>
+       <Text style={s.introPromoCopy}>
+        ابحث عن الدواء بالعربي أو الإنجليزي، واطّلع على المادة الفعالة والسعر والمثائل المتاحة.
+       </Text>
+       <View style={s.introFeatureList}>
+        <View style={s.introFeatureRow}>
+         <View style={s.introFeatureIcon}><Text style={s.introFeatureIconText}>⌕</Text></View>
+         <Text style={s.introFeatureText}>بحث سريع وسهل عن الأدوية</Text>
+        </View>
+        <View style={s.introFeatureRow}>
+         <View style={s.introFeatureIcon}><Text style={s.introFeatureIconText}>⇄</Text></View>
+         <Text style={s.introFeatureText}>عرض المثائل حسب المادة الفعالة</Text>
+        </View>
+        <View style={s.introFeatureRow}>
+         <View style={s.introFeatureIcon}><Text style={s.introFeatureIconText}>✓</Text></View>
+         <Text style={s.introFeatureText}>بيانات محفوظة على جهازك للبحث دون إنترنت</Text>
+        </View>
+       </View>
+       <Text style={s.introPromoFootnote}>المعلومات للاسترشاد، وقرار الاستبدال للصيدلي أو الطبيب.</Text>
+      </View>
+     </ScrollView>
+
+     <View style={s.introBottom}>
+      <Text style={s.introBottomHint}>جاهز تبدأ؟</Text>
+      <Pressable
+       testID="start-app-button"
+       accessibilityRole="button"
+       accessibilityLabel="Start"
+       style={s.introStartButton}
+       onPress={() => setHasStarted(true)}
+      >
+       <Text style={s.introStartText}>Start</Text>
+       <Text style={s.introStartArrow}>→</Text>
+      </Pressable>
+     </View>
+    </View>
+   </SafeAreaView>
+  );
+ }
 
  return <SafeAreaView style={s.safe}>
   <StatusBar barStyle="dark-content"/>
@@ -306,6 +381,39 @@ function Info({l,v}){
 }
 
 const s=StyleSheet.create({
+ introSafe:{flex:1,backgroundColor:"#00695C"},
+ introRoot:{flex:1,backgroundColor:"#F7F5ED"},
+ introHeader:{backgroundColor:"#00695C",paddingHorizontal:24,paddingTop:20,paddingBottom:26,borderBottomLeftRadius:28,borderBottomRightRadius:28},
+ introBrandRow:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10},
+ introLogo:{width:44,height:44,borderRadius:15,backgroundColor:"#E5F2EA",alignItems:"center",justifyContent:"center",borderWidth:1,borderColor:"#B9D9CA"},
+ introLogoMark:{fontSize:27,fontWeight:"900",color:"#00695C"},
+ introBrand:{fontSize:29,fontWeight:"900",letterSpacing:.3,color:"#FFF"},
+ introEyebrow:{marginTop:15,fontSize:15,fontWeight:"800",color:"#C4E2D7",textAlign:"center"},
+ introHeaderCopy:{marginTop:7,fontSize:21,lineHeight:30,fontWeight:"900",color:"#FFF",textAlign:"center"},
+ introAdScroll:{flex:1},
+ introAdScrollContent:{flexGrow:1,justifyContent:"center",paddingHorizontal:18,paddingTop:18,paddingBottom:18},
+ introPromoCard:{backgroundColor:"#FFFDF8",borderRadius:24,borderWidth:1,borderColor:"#D9E5DB",paddingHorizontal:20,paddingTop:17,paddingBottom:16,alignItems:"stretch",elevation:3,shadowColor:"#123B34",shadowOpacity:.08,shadowRadius:12,shadowOffset:{width:0,height:5}},
+ introPromoTopRow:{flexDirection:"row-reverse",justifyContent:"space-between",alignItems:"center"},
+ introPromoBadge:{borderRadius:20,backgroundColor:"#E1F1E9",paddingHorizontal:12,paddingVertical:6},
+ introPromoBadgeText:{fontSize:12,fontWeight:"800",color:"#00695C"},
+ introPromoOverline:{fontSize:12,fontWeight:"900",letterSpacing:1.4,color:"#86A59A"},
+ introPillIllustration:{height:100,alignItems:"center",justifyContent:"center",marginTop:7,marginBottom:8,overflow:"hidden"},
+ introPillEmoji:{fontSize:53,zIndex:2},
+ introOrbitOne:{position:"absolute",width:84,height:84,borderRadius:42,borderWidth:1.5,borderColor:"#9BCDC0",backgroundColor:"#E7F4EE"},
+ introOrbitTwo:{position:"absolute",width:112,height:112,borderRadius:56,borderWidth:1,borderColor:"#D8EAE1"},
+ introPromoTitle:{fontSize:23,lineHeight:32,fontWeight:"900",color:"#06463F",textAlign:"center"},
+ introPromoCopy:{fontSize:15,lineHeight:25,color:"#596B64",textAlign:"center",marginTop:10},
+ introFeatureList:{marginTop:17,gap:11,borderTopWidth:1,borderTopColor:"#E9EFE7",paddingTop:15},
+ introFeatureRow:{flexDirection:"row-reverse",alignItems:"center",gap:10},
+ introFeatureIcon:{width:30,height:30,borderRadius:10,backgroundColor:"#E3F1E9",alignItems:"center",justifyContent:"center"},
+ introFeatureIconText:{fontSize:20,fontWeight:"900",color:"#087466"},
+ introFeatureText:{flex:1,fontSize:14,fontWeight:"700",lineHeight:21,color:"#28443C",textAlign:"right"},
+ introPromoFootnote:{fontSize:11,lineHeight:17,color:"#839088",textAlign:"center",marginTop:16},
+ introBottom:{paddingHorizontal:22,paddingTop:12,paddingBottom:16,backgroundColor:"#F7F5ED",borderTopWidth:1,borderTopColor:"#E4E9DE"},
+ introBottomHint:{fontSize:13,color:"#6A7C73",fontWeight:"700",textAlign:"center",marginBottom:9},
+ introStartButton:{minHeight:54,borderRadius:16,backgroundColor:"#00695C",flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,elevation:2},
+ introStartText:{fontSize:19,fontWeight:"900",letterSpacing:.3,color:"#FFF"},
+ introStartArrow:{fontSize:22,fontWeight:"700",color:"#FFF"},
  safe:{flex:1,backgroundColor:"#F7F5ED"},
  container:{flex:1,backgroundColor:"#F7F5ED"},
  homeHeader:{height:112,backgroundColor:"#00695C",paddingTop:18,paddingHorizontal:14,flexDirection:"row",alignItems:"center",justifyContent:"space-between",borderBottomWidth:1,borderBottomColor:"#00574F"},
