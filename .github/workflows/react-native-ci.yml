@@ -11,6 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify bundled offline SQLite database
+        run: |
+          python - <<'PY'
+          import sqlite3
+          from pathlib import Path
+
+          path = Path("assets/egymeds-seed.db")
+          if not path.exists() or path.stat().st_size == 0:
+              raise SystemExit("Bundled SQLite database is missing or empty.")
+          db = sqlite3.connect(path)
+          try:
+              integrity = db.execute("PRAGMA integrity_check").fetchone()[0]
+              count = db.execute("SELECT COUNT(*) FROM drugs_cache").fetchone()[0]
+          finally:
+              db.close()
+          if integrity != "ok" or count < 1:
+              raise SystemExit(f"Invalid bundled database: integrity={integrity}, rows={count}")
+          print(f"Bundled database verified: {count:,} drugs.")
+          PY
       - uses: actions/setup-node@v4
         with:
           node-version: 22
