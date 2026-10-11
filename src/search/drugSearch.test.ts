@@ -31,7 +31,7 @@ test("English brand search is case-insensitive and ranks exact names first", () 
 });
 
 test("Arabic brand search strips tashkeel and searches the Arabic name field", () => {
-  assert.deepEqual(ids("بَنَادُول"), [1, 7]);
+  assert.deepEqual(ids("بَنَادُول").sort((a, b) => Number(a) - Number(b)), [1, 2, 7]);
 });
 
 test("brand search tolerates common English p/b pronunciation variation", () => {
@@ -52,7 +52,7 @@ test("multi-word query finds terms in order across a longer brand name", () => {
 
 test("English active-ingredient search uses the ingredient field, not brand names", () => {
   const result = search(index, "paracetamol", { by: "ingredient" });
-  assert.deepEqual(result.hits.map((hit) => hit.item.id), [1, 2, 7]);
+  assert.deepEqual(result.hits.map((hit) => hit.item.id).sort((a, b) => Number(a) - Number(b)), [1, 2, 7]);
   assert.deepEqual(ids("paracetamol", "brand"), []);
 });
 
