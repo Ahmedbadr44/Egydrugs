@@ -36,8 +36,11 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Verify preinstalled Android SDK
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-}"
+          test -x "$ANDROID_HOME/platform-tools/adb" || test -x "$ANDROID_SDK_ROOT/platform-tools/adb"
 
       - name: Install JavaScript dependencies
         run: npm install
