@@ -220,7 +220,7 @@ function EgyMedsApp() {
       <View style={s.detailHeaderIcon}/>
      </View>
 
-     {selected&&<ScrollView contentContainerStyle={s.detailScroll}>
+     {selected&&<ScrollView key={String(selected.id)} contentContainerStyle={s.detailScroll}>
       <View style={s.heroCard}>
        <Pressable style={s.imageSearchHero} onPress={openImageSearch} accessibilityRole="button" accessibilityLabel="البحث عن صورة الدواء">
         {/* UI change: medicine icon gives the empty image area a useful fallback. */}
